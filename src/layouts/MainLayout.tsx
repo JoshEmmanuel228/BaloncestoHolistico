@@ -158,7 +158,7 @@ const MainLayout = () => {
                 <button className="profile-btn" onClick={() => { setWelcomeOpen(false); navigate('/asistente'); }}>
                   Ir a Asistente deportivo
                 </button>
-                <button className="profile-btn" onClick={() => { setWelcomeOpen(false); window.open('http://localhost:5000', '_blank'); }}>
+                <button className="profile-btn" onClick={() => { setWelcomeOpen(false); window.open('/athenaball', '_blank'); }}>
                   Ir a AthenaBall
                 </button>
               </div>
