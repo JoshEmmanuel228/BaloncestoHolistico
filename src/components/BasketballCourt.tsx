@@ -131,18 +131,7 @@ const Backboard = styled(Box)(({ side }: { side: 'left' | 'right' }) => ({
     }
 }));
 
-const Rim = styled(Box)(({ side }: { side: 'left' | 'right' }) => ({
-    position: 'absolute',
-    bottom: '125px', // Height of rim relative to floor
-    [side === 'left' ? 'left' : 'right']: '5px', // Stick out from pole/backboard
-    width: '25px',
-    height: '25px', // It's a circle viewed from side??
-    // Actually we want a ring engaging with the ball.
-    // Let's make a ring that lies flat parallel to floor.
-    transform: `translateX(${side === 'left' ? '20px' : '-20px'})`,
-    // Since we are in HoopBase which is flat on floor...
-    // We want the rim simply at Z=120px.
-}));
+
 
 // A container for the rim that handles the height and orientation
 const RimContainer = styled(Box)(({ side }: { side: 'left' | 'right' }) => ({
