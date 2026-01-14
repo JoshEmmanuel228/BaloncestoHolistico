@@ -258,6 +258,10 @@ def create_app():
     def index():
         return render_template('index.html')
 
+    @app.route('/athenaball')
+    def athenaball_ui():
+        return render_template('athenaball.html')
+
     @app.route('/analyze', methods=['POST'])
     def analyze():
         if 'file' not in request.files: return jsonify({'error': 'No file part'}), 400

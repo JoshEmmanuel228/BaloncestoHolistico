@@ -48,8 +48,8 @@ const menuItems = [
     path: '/nutrition',
   },
   { text: 'Equipo', icon: <TeamIcon />, path: '/team' },
-  { text: 'Asistente', icon: <span style={{fontWeight:'bold',color:'#00eaff',fontSize:22}}>🤖</span>, path: '/asistente' },
-  { text: 'AthenaBall', icon: <img src="/basketball.svg" alt="AthenaBall Icon" style={{ width: 24, height: 24 }} />, path: 'http://localhost:5000', target: '_blank' },
+  { text: 'Asistente', icon: <span style={{ fontWeight: 'bold', color: '#00eaff', fontSize: 22 }}>🤖</span>, path: '/asistente' },
+  { text: 'AthenaBall', icon: <img src="/basketball.svg" alt="AthenaBall Icon" style={{ width: 24, height: 24 }} />, path: '/athenaball', target: '_blank' },
 ];
 
 const MainLayout = () => {
@@ -130,14 +130,14 @@ const MainLayout = () => {
             <div className="welcome-modal-bg"></div>
             <div className="welcome-modal-content">
               <button className="close-btn" onClick={() => setWelcomeOpen(false)}>&times;</button>
-              <h2>¡Bienvenido a tu cancha digital!<br/>El Punto de Encuentro de la Élite del Baloncesto.</h2>
+              <h2>¡Bienvenido a tu cancha digital!<br />El Punto de Encuentro de la Élite del Baloncesto.</h2>
               <p>
-                Es un honor darles la más cordial bienvenida a <b>Basketbal Holistico</b>, el nuevo hub digital diseñado exclusivamente para la comunidad del baloncesto profesional.<br/><br/>
-                Este espacio ha sido creado pensando en ustedes: jugadores, entrenadores, agentes, scouts, analistas y directivos que definen el presente y el futuro de este deporte.<br/><br/>
-                Nuestra misión es simple: proveer una plataforma segura, avanzada y eficiente donde puedan conectar, colaborar, analizar tendencias y descubrir nuevas oportunidades. Aquí, la profesionalidad se encuentra con la pasión por el juego.<br/><br/>
-                Les invitamos a explorar las herramientas, completar su perfil profesional y comenzar a interactuar con colegas de la industria.<br/><br/>
-                <b>Bienvenidos al siguiente nivel.</b><br/><br/>
-                <i>Atentamente,<br/>El equipo de Joshua Meza.</i>
+                Es un honor darles la más cordial bienvenida a <b>Basketbal Holistico</b>, el nuevo hub digital diseñado exclusivamente para la comunidad del baloncesto profesional.<br /><br />
+                Este espacio ha sido creado pensando en ustedes: jugadores, entrenadores, agentes, scouts, analistas y directivos que definen el presente y el futuro de este deporte.<br /><br />
+                Nuestra misión es simple: proveer una plataforma segura, avanzada y eficiente donde puedan conectar, colaborar, analizar tendencias y descubrir nuevas oportunidades. Aquí, la profesionalidad se encuentra con la pasión por el juego.<br /><br />
+                Les invitamos a explorar las herramientas, completar su perfil profesional y comenzar a interactuar con colegas de la industria.<br /><br />
+                <b>Bienvenidos al siguiente nivel.</b><br /><br />
+                <i>Atentamente,<br />El equipo de Joshua Meza.</i>
               </p>
               <button className="profile-btn" onClick={() => { setWelcomeOpen(false); navigate('/profile'); }}>
                 Ir a mi perfil
@@ -152,15 +152,15 @@ const MainLayout = () => {
                 <button className="profile-btn" onClick={() => { setWelcomeOpen(false); navigate('/team'); }}>
                   Ir a Equipo
                 </button>
-                    <button className="profile-btn" onClick={() => { setWelcomeOpen(false); navigate('/mental'); }}>
-                      Ir a Preparación Mental
-                    </button>
-                    <button className="profile-btn" onClick={() => { setWelcomeOpen(false); navigate('/asistente'); }}>
-                      Ir a Asistente deportivo
-                    </button>
-                    <button className="profile-btn" onClick={() => { setWelcomeOpen(false); window.open('http://localhost:5000', '_blank'); }}>
-                      Ir a AthenaBall
-                    </button>
+                <button className="profile-btn" onClick={() => { setWelcomeOpen(false); navigate('/mental'); }}>
+                  Ir a Preparación Mental
+                </button>
+                <button className="profile-btn" onClick={() => { setWelcomeOpen(false); navigate('/asistente'); }}>
+                  Ir a Asistente deportivo
+                </button>
+                <button className="profile-btn" onClick={() => { setWelcomeOpen(false); window.open('http://localhost:5000', '_blank'); }}>
+                  Ir a AthenaBall
+                </button>
               </div>
             </div>
           </div>
