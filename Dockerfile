@@ -7,11 +7,12 @@ COPY . .
 RUN npm run build
 
 # Etapa 2: Backend (Python/Flask)
-FROM python:3.9-slim
+FROM python:3.9-slim-bookworm
 
 # Instalar dependencias del sistema necesarias para OpenCV
-RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+# 'libgl1' y 'libglib2.0-0' suelen ser suficientes en Bookworm
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
