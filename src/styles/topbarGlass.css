@@ -1,0 +1,134 @@
+/* Barra superior de cristal */
+.topbar-glass {
+  width: 100vw;
+  height: 56px;
+  background: rgba(20, 30, 40, 0.35);
+  backdrop-filter: blur(12px) saturate(1.5);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  border-bottom: 1.5px solid #00eaff55;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1200;
+  padding: 0 2.5vw;
+  box-shadow: 0 2px 24px #00eaff33;
+}
+.topbar-glass .user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #222b;
+  border: 2px solid #00eaff;
+  margin-left: 1vw;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+  box-shadow: 0 0 12px #00eaff44;
+}
+.topbar-glass .user-avatar:hover {
+  box-shadow: 0 0 24px #00eaff99;
+}
+.topbar-glass .app-title {
+  color: #fff;
+  font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.08em;
+  margin-right: auto;
+  margin-left: 1vw;
+  text-shadow: 0 2px 8px #00eaff99;
+}
+
+/* Modal bienvenida */
+.welcome-modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.55);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.welcome-modal {
+  position: relative;
+  width: 98vw;
+  max-width: 370px;
+  background: rgba(255,255,255,0.13);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px #00eaff22, 0 1px 4px #0008;
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  backdrop-filter: blur(4px) saturate(1.05);
+}
+.welcome-modal-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url('/Balonycancha.png');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.18;
+  filter: blur(1px) brightness(1.08);
+}
+.welcome-modal-content {
+  position: relative;
+  z-index: 1;
+  padding: 0.32em 1.2em 0.38em 1.2em;
+  color: #fff;
+  text-align: center;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+.welcome-modal-content h2 {
+  font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+  font-size: 0.98rem;
+  color: #00eaff;
+  margin-bottom: 0.22em;
+  text-shadow: 0 1px 8px #000a, 0 0 4px #00eaff99;
+}
+.welcome-modal-content p {
+  font-size: 0.72rem;
+  margin-bottom: 0.22em;
+  color: #eafcff;
+  text-shadow: 0 1px 4px #000a;
+}
+.welcome-modal-content .profile-btn {
+  margin-top: 0.18em;
+  padding: 0.22em 1.1em;
+  font-size: 0.74rem;
+  border-radius: 7px;
+  border: none;
+  background: linear-gradient(90deg, #00eaff 0%, #2c5364 100%);
+  color: #fff;
+  font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+  font-weight: 600;
+  box-shadow: 0 1px 7px #00eaff33;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.welcome-modal-content .profile-btn:hover {
+  background: linear-gradient(90deg, #2c5364 0%, #00eaff 100%);
+  box-shadow: 0 2px 10px #00eaff99;
+}
+.welcome-modal-content .close-btn {
+  position: absolute;
+  top: 0.18em;
+  right: 0.18em;
+  background: rgba(0,0,0,0.18);
+  border: none;
+  color: #fff;
+  font-size: 0.82em;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+  z-index: 2;
+}
+.welcome-modal-content .close-btn:hover {
+  background: #00eaff;
+  color: #222;
+}

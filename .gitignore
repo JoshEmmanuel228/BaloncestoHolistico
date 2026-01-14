@@ -1,0 +1,23 @@
+# Node
+node_modules/
+dist/
+npm-debug.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+AthenaBall_WebApp/static/uploads/
+AthenaBall_WebApp/static/results/
+
+# Large Models (Standard YOLO models can be downloaded, Custom ones <100MB should be kept)
+yolov8x-seg.pt
+yolov8x-pose.pt
+# *.pt  <-- Comented out to allow TRAin2.pt (51MB)
+
+# OS
+.DS_Store
+Thumbs.db

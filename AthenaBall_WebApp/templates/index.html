@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AthenaBall - Analizador Web</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>AthenaBall - Analizador de Baloncesto 🏀🦉</h1>
+    </header>
+    <main>
+        <div class="container">
+            <div class="controls-panel">
+                <h2>1. Cargar Archivo</h2>
+                <form id="upload-form">
+                    <input type="file" id="file-input" name="file" accept="image/png, image/jpeg, video/mp4, video/quicktime">
+
+                    <button type="submit">🚀 Analizar Archivo</button>
+                </form>
+                <div id="loader" class="loader" style="display: none;"></div>
+                
+                <div id="results-info" style="display: none;">
+                    <h2>2. Resultados del Análisis</h2>
+                    <div id="counts">
+                        <h3>Conteo de Objetos:</h3>
+                        <p id="person-count">⛹️ Personas: 0</p>
+                        <p id="ball-count">🏀 Balones: 0</p>
+                        <p id="hoop-count">🥅 Aros: 0</p>
+                    </div>
+                    <div id="views">
+                        <h3>Vistas de Resultados:</h3>
+                        <div class="view-category">
+                            <h4>Vistas Generales</h4>
+                            <div id="view-buttons-general" class="button-grid"></div>
+                        </div>
+                        <div class="view-category">
+                            <h4>Vistas de Persona ⛹️</h4>
+                            <div id="view-buttons-person" class="button-grid"></div>
+                        </div>
+                        <div class="view-category">
+                            <h4>Vistas de Balón 🏀</h4>
+                            <div id="view-buttons-ball" class="button-grid"></div>
+                        </div>
+                        <div class="view-category">
+                            <h4>Vistas de Aro 🥅</h4>
+                            <div id="view-buttons-hoop" class="button-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="display-panel">
+                <div id="image-display">
+                    <p>Selecciona una imagen y presiona "Analizar" para ver los resultados aquí.</p>
+                </div>
+                <button id="download-image-button" class="download-button" style="display: none; margin-top: 10px;">💾 Descargar Imagen</button>
+            </div>
+        </div>
+    </main>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

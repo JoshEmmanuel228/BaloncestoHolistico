@@ -1,0 +1,55 @@
+/* Fondo para la sección de nutrición */
+.nutrition-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  min-width: 100vw;
+  min-height: 100vh;
+  z-index: -10;
+  background-image: url('/nutricion.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+/* Fondo para la sección de equipo */
+.team-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  min-width: 100vw;
+  min-height: 100vh;
+  z-index: -10;
+  background-image: url('/1x1_una_cancha_de_baloncesto_alucina.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+/* Títulos futuristas y legibles sobre fondo */
+.futuristic-title {
+  font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+  font-size: 2.8rem;
+  letter-spacing: 0.12em;
+  color: #fff;
+  text-shadow: 0 2px 16px #00eaff, 0 0 8px #000, 0 0 2px #00eaff;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 18px;
+  padding: 0.5em 1.5em;
+  margin-bottom: 1.2em;
+  display: inline-block;
+  box-shadow: 0 0 24px #00eaff55, 0 2px 8px #000a;
+  border: 1.5px solid #00eaff99;
+  backdrop-filter: blur(2px);
+  text-align: center;
+}
+
+.readable-text {
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}

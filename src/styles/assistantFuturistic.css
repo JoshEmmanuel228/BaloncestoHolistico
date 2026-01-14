@@ -1,0 +1,159 @@
+.assistant-futuristic-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  min-width: 100vw;
+  min-height: 100vh;
+  z-index: -10;
+  background-image: url('/BalonBackground.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.assistant-futuristic-container {
+  position: relative;
+  z-index: 10;
+}
+.assistant-futuristic-container {
+  background-image: url('/fondoasistentedeportivo.jpg');
+  background-size: cover;
+  background-position: center;
+  border: 2.5px solid #00eaff;
+  border-radius: 2.5em;
+  box-shadow: 0 0 60px #00eaff55, 0 0 12px #fff2;
+  padding: 2.5em 2em 2em 2em;
+  max-width: 420px;
+  width: 100%;
+  min-height: 480px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+  backdrop-filter: blur(8px) saturate(1.3);
+}
+
+.futuristic-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: scroll; /* Cambiado a scroll para que siempre esté visible */
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+  max-height: 60vh; /* Límite de altura para el contenedor de mensajes */
+  padding-right: 10px; /* Espacio para la barra de scroll */
+}
+
+/* Estilos para la barra de scroll en navegadores Webkit */
+.chat-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #1a2a3a; /* Color de fondo de la pista */
+  border-radius: 10px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background-color: #00eaff; /* Color del pulgar de la barra */
+  border-radius: 10px;
+  border: 2px solid #1a2a3a; /* Espacio alrededor del pulgar */
+  box-shadow: 0 0 12px #00eaff88; /* Sombra brillante */
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background-color: #00b8d4; /* Color del pulgar al pasar el mouse */
+  box-shadow: 0 0 18px #00eaff; /* Sombra más intensa */
+}
+
+.msg {
+  padding: 0.7em 1.1em;
+  border-radius: 1.2em;
+  max-width: 85%;
+  font-size: 1.05em;
+  word-break: break-word;
+  box-shadow: 0 2px 12px #00eaff22;
+  background: #1a2a3a;
+  color: #fff;
+  align-self: flex-start;
+  animation: fadeIn 0.3s;
+}
+
+.msg.user {
+  background: linear-gradient(90deg, #00eaff 0%, #2c5364 100%);
+  color: #fff;
+  align-self: flex-end;
+}
+
+.msg.bot {
+  background: #1a2a3a;
+  color: #00eaff;
+  border-left: 3px solid #00eaff;
+}
+
+.msg.loading {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 0.7em;
+}
+
+.chat-input-row input {
+  flex: 1;
+  padding: 0.7em 1em;
+  border-radius: 1.2em;
+  border: 1.5px solid #00eaff;
+  background: #0f2027;
+  background-image: url('/fondoasistentedeportivo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-blend-mode: overlay;
+  color: #fff;
+  font-size: 1em;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.chat-input-row input:focus {
+  border: 2px solid #00eaff;
+}
+
+.chat-input-row button {
+  padding: 0.7em 1.5em;
+  border-radius: 1.2em;
+  border: none;
+  background: linear-gradient(90deg, #00eaff 0%, #2c5364 100%);
+  color: #fff;
+  font-weight: 600;
+  font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+  font-size: 1em;
+  cursor: pointer;
+  box-shadow: 0 2px 12px #00eaff44;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.chat-input-row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

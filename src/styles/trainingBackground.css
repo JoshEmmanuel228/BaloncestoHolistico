@@ -1,0 +1,26 @@
+/* Fondo especial para la sección de entrenamiento con balones.JPG */
+.training-bg-balones {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  min-width: 100vw;
+  min-height: 100vh;
+  z-index: -10;
+  background-image: url('/balones.JPG');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  image-rendering: auto;
+  filter: none;
+}
+
+/* Quitar cualquier filtro de desenfoque en todos los fondos personalizados */
+.profile-bg-mj,
+.mental-bg-kb,
+.training-bg-balones {
+  filter: none !important;
+  image-rendering: auto !important;
+}
