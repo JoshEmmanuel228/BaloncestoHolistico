@@ -243,6 +243,11 @@ def run_analysis_background(task_id, upload_path, file_type, tasks_dict):
 # --- App Factory and Main Execution ---
 def create_app():
     app = Flask(__name__)
+    
+    # Enable CORS for all domains to ensure public access
+    from flask_cors import CORS
+    CORS(app)
+    
     app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/uploads')
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
