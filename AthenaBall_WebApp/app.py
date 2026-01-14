@@ -30,13 +30,24 @@ def load_models_for_process():
     try:
         print(f"Cargando modelos YOLO en proceso {os.getpid()}...")
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        yolo_model_path = os.path.join(BASE_DIR, 'yolov8x-seg.pt')
+        
+        # Custom model (must be present in the container)
         basket_model_path = os.path.join(BASE_DIR, 'TRAin2.pt')
-        pose_model_path = os.path.join(BASE_DIR, 'yolov8x-pose.pt')
-
-        yolo_m = YOLO(yolo_model_path)
+        
+        # Load models
+        # Use filenames for standard models to allow Ultralytics to auto-download them if missing
+        # Use absolute path for custom model
+        print("Cargando YOLOv8x-seg...")
+        yolo_m = YOLO('yolov8x-seg.pt') 
+        
+        print(f"Cargando Custom Model desde {basket_model_path}...")
+        if not os.path.exists(basket_model_path):
+            print(f"⚠️ ADVERTENCIA: No se encontró el modelo personalizado en {basket_model_path}")
         basket_m = YOLO(basket_model_path)
-        pose_m = YOLO(pose_model_path)
+        
+        print("Cargando YOLOv8x-pose...")
+        pose_m = YOLO('yolov8x-pose.pt')
+        
         colors_util = Colors()
         print(f"✅ Modelos cargados correctamente en proceso {os.getpid()}.")
         return yolo_m, basket_m, pose_m, colors_util
