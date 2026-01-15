@@ -48,4 +48,4 @@ ENV FLASK_APP=AthenaBall_WebApp.app:app
 EXPOSE 10000
 
 # Comando de inicio
-CMD ["gunicorn", "AthenaBall_WebApp.app:app", "--bind", "0.0.0.0:10000", "--timeout", "120"]
+CMD ["sh", "-c", "gunicorn AthenaBall_WebApp.app:app --bind 0.0.0.0:${PORT:-10000} --timeout 120"]
