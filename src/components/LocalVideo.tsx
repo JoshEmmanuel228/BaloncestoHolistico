@@ -20,8 +20,8 @@ const LocalVideo = ({ src, title, description }: LocalVideoProps) => {
                             backgroundColor: "#000" // Fondo negro para archivos de solo audio
                         }}
                     >
-                        <source src={src} type="video/mp4" />
-                        <source src={src} type="audio/mp4" />
+                        <source src={`/static${src}`} type="video/mp4" />
+                        <source src={`/static${src}`} type="audio/mp4" />
                         Tu navegador no soporta el elemento de video/audio.
                     </video>
                 </Box>

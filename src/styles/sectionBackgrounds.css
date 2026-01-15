@@ -6,7 +6,7 @@
   top: 0;
   left: 0;
   z-index: -1;
-  background-image: url('/MJ.JPG');
+  background-image: url('/static/MJ.JPG');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -20,7 +20,7 @@
   top: 0;
   left: 0;
   z-index: -1;
-  background-image: url('/KB.JPG');
+  background-image: url('/static/KB.JPG');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

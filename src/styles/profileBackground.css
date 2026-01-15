@@ -8,16 +8,18 @@
   z-index: -1;
   display: flex;
 }
+
 .profile-bg-split .left {
   flex: 1;
-  background-image: url('/MJ.JPG');
+  background-image: url('/static/MJ.JPG');
   background-size: cover;
   background-position: center left;
   background-repeat: no-repeat;
 }
+
 .profile-bg-split .right {
   flex: 1;
-  background-image: url('/KB.JPG');
+  background-image: url('/static/KB.JPG');
   background-size: cover;
   background-position: center right;
   background-repeat: no-repeat;

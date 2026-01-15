@@ -7,7 +7,7 @@
   min-width: 100vw;
   min-height: 100vh;
   z-index: -10;
-  background-image: url('/BalonBackground.png');
+  background-image: url('/static/BalonBackground.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

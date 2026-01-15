@@ -23,7 +23,7 @@ import {
   Group as TeamIcon,
 } from '@mui/icons-material';
 import { useState, useRef } from 'react';
-import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
+import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Menu as MenuIcon } from '@mui/icons-material';
 import sidebarBackground from '../assets/IMG_0227.JPG';
 
 const drawerWidth = 240;
@@ -118,6 +118,26 @@ const MainLayout = () => {
 
   return (
     <Box sx={{ display: 'flex' }}>
+      {/* Botón de menú móvil */}
+      {isMobile && (
+        <div style={{ position: 'fixed', top: '16px', left: '16px', zIndex: 1301 }}>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{
+              mr: 2,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              '&:hover': { backgroundColor: 'rgba(0,0,0,0.7)' }
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+        </div>
+      )}
+
       {/* Botón de bienvenida */}
       <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 1301 }}>
         <Avatar className="user-avatar" onClick={() => setWelcomeOpen(true)} src="/basketball.svg" />
