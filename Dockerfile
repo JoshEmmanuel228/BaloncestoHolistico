@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+ARG VITE_GEMINI_API_KEY
+ENV VITE_GEMINI_API_KEY=$VITE_GEMINI_API_KEY
 RUN npm run build
 
 # Etapa 2: Backend (Python/Flask)
@@ -28,10 +30,13 @@ COPY AthenaBall_WebApp ./AthenaBall_WebApp
 # Copiar el build de React desde la etapa 1
 # Movemos los archivos estáticos a las carpetas que Flask espera
 # Flask default: templates/ para HTML, static/ para CSS/JS/IMG
-COPY --from=build-step /app/dist/index.html ./AthenaBall_WebApp/templates/index.html
-COPY --from=build-step /app/dist/assets ./AthenaBall_WebApp/static/assets
-COPY --from=build-step /app/dist/*.png ./AthenaBall_WebApp/static/
-# Copiar cualquier otro archivo raíz del build si es necesario (manifest, favicon, etc)
+# Copiar el build de React desde la etapa 1
+# Copiamos TODO el contenido de dist a static para no perder videos, audios ni JPGs
+COPY --from=build-step /app/dist ./AthenaBall_WebApp/static
+
+# Mover index.html a la carpeta templates de Flask
+# (y borrarlo de static para no duplicar, aunque no afecta mucho)
+RUN mv ./AthenaBall_WebApp/static/index.html ./AthenaBall_WebApp/templates/index.html
 
 # Descargar modelos YOLO si no existen (Ultralytics los descarga automáticamente al usarlos, 
 # pero podemos forzar una descarga "dummy" o dejar que el primer request lo haga.
