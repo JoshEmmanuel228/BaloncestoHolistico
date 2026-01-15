@@ -13,6 +13,7 @@ const FuturisticAssistant: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Llamada a la API usando el SDK
   const sendMessage = async () => {
     if (!input.trim()) return;
     setMessages(msgs => [...msgs, { from: 'user', text: input }]);
@@ -25,48 +26,42 @@ const FuturisticAssistant: React.FC = () => {
 
       const genAI = new GoogleGenerativeAI(apiKey);
 
-      // Actually the standard is not to list models from the client instance easily in web?
-      // Let's trust the previous error message suggestion: "Call ListModels". 
-      // It implies it is possible.
-    } catch (e) { }
+      // Usamos el modelo validado: gemini-2.5-flash
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    // Vamos a probar con 'gemini-pro' de nuevo pero imprimiendo info
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const result = await model.generateContent(input);
+      const response = await result.response;
+      const text = response.text();
 
-    const result = await model.generateContent(input);
+      setMessages(msgs => [...msgs, { from: 'bot', text: text }]);
+    } catch (err: any) {
+      console.error(err);
+      setMessages(msgs => [...msgs, { from: 'bot', text: `Error: ${err.message || 'Error al conectar con la IA.'}` }]);
+    }
+    setLoading(false);
+    setInput('');
+  };
 
-    const response = await result.response;
-    const text = response.text();
-
-    setMessages(msgs => [...msgs, { from: 'bot', text: text }]);
-  } catch (err: any) {
-    console.error(err);
-    setMessages(msgs => [...msgs, { from: 'bot', text: `Error: ${err.message || 'Error al conectar con la IA.'}` }]);
-  }
-  setLoading(false);
-  setInput('');
-};
-
-return (
-  <div className="futuristic-chat">
-    <div className="chat-messages">
-      {messages.map((msg, idx) => (
-        <div key={idx} className={`msg ${msg.from}`}>{msg.text}</div>
-      ))}
-      {loading && <div className="msg bot loading">Pensando...</div>}
+  return (
+    <div className="futuristic-chat">
+      <div className="chat-messages">
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`msg ${msg.from}`}>{msg.text}</div>
+        ))}
+        {loading && <div className="msg bot loading">Pensando...</div>}
+      </div>
+      <div className="chat-input-row">
+        <input
+          type="text"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="Escribe tu pregunta o pide un entrenamiento..."
+          onKeyDown={e => e.key === 'Enter' && sendMessage()}
+        />
+        <button onClick={sendMessage} disabled={loading || !input.trim()}>Enviar</button>
+      </div>
     </div>
-    <div className="chat-input-row">
-      <input
-        type="text"
-        value={input}
-        onChange={e => setInput(e.target.value)}
-        placeholder="Escribe tu pregunta o pide un entrenamiento..."
-        onKeyDown={e => e.key === 'Enter' && sendMessage()}
-      />
-      <button onClick={sendMessage} disabled={loading || !input.trim()}>Enviar</button>
-    </div>
-  </div>
-);
+  );
 };
 
 export default FuturisticAssistant;
