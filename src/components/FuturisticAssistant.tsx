@@ -13,26 +13,21 @@ const FuturisticAssistant: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Debug: Listar modelos al montar el componente
+  // Debug: Listar modelos al montar
   useEffect(() => {
-    const logModels = async () => {
+    const listModels = async () => {
       try {
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
         if (!apiKey) return;
-        const genAI = new GoogleGenerativeAI(apiKey);
-        // Listar modelos y mostrar en consola
-        const result = await genAI.getGenerativeModel({ model: "gemini-pro" }).apiKey; // Hack workaround if listModels isn't on invalid instance? 
-        // Actually genAI instance has listModels?
-        // Wait, listModels is not on genAI instance in all versions? 
-        // Let's check documentation or assumption. 
-        // Actually strictly speaking it might be `genAI.getGenerativeModel(...)`.
-        // Wait, the SDK has a top level `GoogleGenerativeAI` class.
-        // Let's safe check the code.
+        console.log("Consultando modelos disponibles...");
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        const data = await res.json();
+        console.log("=== MODELOS DISPONIBLES ===", data);
       } catch (e) {
-        console.error("Debug Error:", e);
+        console.error("Error listando modelos:", e);
       }
     };
-    // logModels();
+    listModels();
   }, []);
 
   const sendMessage = async () => {
