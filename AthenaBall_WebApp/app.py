@@ -254,8 +254,12 @@ def create_app():
     manager = multiprocessing.Manager()
     tasks = manager.dict()
 
-    @app.route('/')
-    def index():
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def index(path):
+        # Allow requests to static files, analyze API, and athenaball UI (handled by specific routes)
+        if path.startswith('static/') or path == 'analyze' or path == 'athenaball':
+            return app.send_static_file(path)
         return render_template('index.html')
 
     @app.route('/athenaball')
