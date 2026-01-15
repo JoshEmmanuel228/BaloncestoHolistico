@@ -290,10 +290,13 @@ def create_app():
     
     return app
 
+# Expose app for Gunicorn
+app = create_app()
+
 if __name__ == '__main__':
     if not all([YOLO_AVAILABLE, PILLOW_AVAILABLE]):
         print("Faltan dependencias. Por favor, instala 'ultralytics' y 'Pillow'.")
     else:
         multiprocessing.freeze_support()
-        app = create_app()
+        # app is already created
         app.run(host='0.0.0.0', port=3001, debug=False)
