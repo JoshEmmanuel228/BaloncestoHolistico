@@ -243,7 +243,7 @@ const MainLayout = () => {
             sx={{
               '& .MuiDrawer-paper': {
                 boxSizing: 'border-box',
-                width: sidebarOpen ? drawerWidth : 0,
+                width: drawerWidth,
                 transition: 'width 200ms',
                 backgroundImage: `url(${sidebarBackground})`,
                 backgroundSize: 'cover',
