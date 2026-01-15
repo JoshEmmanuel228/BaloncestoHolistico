@@ -25,7 +25,10 @@ const FuturisticAssistant: React.FC = () => {
       }
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+
+      // Debug: Listar modelos disponibles si falla
+      // genAI.listModels().then(response => console.log("Modelos disponibles:", response.models)).catch(console.error);
 
       const result = await model.generateContent(input);
       const response = await result.response;
