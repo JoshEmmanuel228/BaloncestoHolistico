@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // Aquí deberías importar tu API de Gemini o el hook que la conecta
 // import { useGeminiAPI } from '../api/gemini';
 
