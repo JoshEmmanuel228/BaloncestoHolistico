@@ -23,7 +23,7 @@
 }
 
 .assistant-futuristic-container {
-  background-image: url('/static/fondoasistentedeportivo.jpg');
+  background-image: url('/static/fondoasistentedeportivo.jpg?v=2');
   background-size: cover;
   background-position: center;
   border: 2.5px solid #00eaff;
@@ -130,7 +130,7 @@
   border-radius: 1.2em;
   border: 1.5px solid #00eaff;
   background: #0f2027;
-  background-image: url('/static/fondoasistentedeportivo.jpg');
+  background-image: url('/static/fondoasistentedeportivo.jpg?v=2');
   background-size: cover;
   background-position: center;
   background-blend-mode: overlay;

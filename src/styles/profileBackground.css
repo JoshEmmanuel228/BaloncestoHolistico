@@ -11,7 +11,7 @@
 
 .profile-bg-split .left {
   flex: 1;
-  background-image: url('/static/MJ.JPG');
+  background-image: url('/static/MJ.JPG?v=2');
   background-size: cover;
   background-position: center left;
   background-repeat: no-repeat;
@@ -19,7 +19,7 @@
 
 .profile-bg-split .right {
   flex: 1;
-  background-image: url('/static/MJ.JPG');
+  background-image: url('/static/MJ.JPG?v=2');
   background-size: cover;
   background-position: center right;
   background-repeat: no-repeat;
