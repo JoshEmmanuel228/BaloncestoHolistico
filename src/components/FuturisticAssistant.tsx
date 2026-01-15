@@ -15,8 +15,13 @@ const FuturisticAssistant: React.FC = () => {
     setMessages([...messages, { from: 'user', text: input }]);
     setLoading(true);
     try {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error('API Key no configurada. Por favor define VITE_GEMINI_API_KEY en las variables de entorno.');
+      }
+
       const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=AIzaSyDaE3RCJgWHzolrdLOGEzXOcCw9rR09GNQ',
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: {
@@ -29,16 +34,23 @@ const FuturisticAssistant: React.FC = () => {
           })
         }
       );
+
+      if (!response.ok) {
+        if (response.status === 429) throw new Error('Cuota excedida (Error 429).');
+        throw new Error(`Error del servidor: ${response.status}`);
+      }
+
       const data = await response.json();
       let aiText = '';
       if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
         aiText = data.candidates[0].content.parts[0].text;
       } else {
-        aiText = 'No se recibió respuesta de la IA.\n\nRespuesta completa de la API:\n' + JSON.stringify(data, null, 2);
+        aiText = 'No se recibió respuesta de la IA.';
       }
       setMessages(msgs => [...msgs, { from: 'bot', text: aiText }]);
-    } catch (err) {
-      setMessages(msgs => [...msgs, { from: 'bot', text: 'Error al conectar con la IA.' }]);
+    } catch (err: any) {
+      console.error(err);
+      setMessages(msgs => [...msgs, { from: 'bot', text: `Error: ${err.message || 'Error al conectar con la IA.'}` }]);
     }
     setLoading(false);
     setInput('');
