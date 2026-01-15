@@ -21,8 +21,9 @@
   position: relative;
   z-index: 10;
 }
+
 .assistant-futuristic-container {
-  background-image: url('/fondoasistentedeportivo.jpg');
+  background-image: url('/static/fondoasistentedeportivo.jpg');
   background-size: cover;
   background-position: center;
   border: 2.5px solid #00eaff;
@@ -48,13 +49,16 @@
 
 .chat-messages {
   flex: 1;
-  overflow-y: scroll; /* Cambiado a scroll para que siempre esté visible */
+  overflow-y: scroll;
+  /* Cambiado a scroll para que siempre esté visible */
   margin-bottom: 1.2em;
   display: flex;
   flex-direction: column;
   gap: 0.7em;
-  max-height: 60vh; /* Límite de altura para el contenedor de mensajes */
-  padding-right: 10px; /* Espacio para la barra de scroll */
+  max-height: 60vh;
+  /* Límite de altura para el contenedor de mensajes */
+  padding-right: 10px;
+  /* Espacio para la barra de scroll */
 }
 
 /* Estilos para la barra de scroll en navegadores Webkit */
@@ -63,20 +67,26 @@
 }
 
 .chat-messages::-webkit-scrollbar-track {
-  background: #1a2a3a; /* Color de fondo de la pista */
+  background: #1a2a3a;
+  /* Color de fondo de la pista */
   border-radius: 10px;
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-  background-color: #00eaff; /* Color del pulgar de la barra */
+  background-color: #00eaff;
+  /* Color del pulgar de la barra */
   border-radius: 10px;
-  border: 2px solid #1a2a3a; /* Espacio alrededor del pulgar */
-  box-shadow: 0 0 12px #00eaff88; /* Sombra brillante */
+  border: 2px solid #1a2a3a;
+  /* Espacio alrededor del pulgar */
+  box-shadow: 0 0 12px #00eaff88;
+  /* Sombra brillante */
 }
 
 .chat-messages::-webkit-scrollbar-thumb:hover {
-  background-color: #00b8d4; /* Color del pulgar al pasar el mouse */
-  box-shadow: 0 0 18px #00eaff; /* Sombra más intensa */
+  background-color: #00b8d4;
+  /* Color del pulgar al pasar el mouse */
+  box-shadow: 0 0 18px #00eaff;
+  /* Sombra más intensa */
 }
 
 .msg {
@@ -120,7 +130,7 @@
   border-radius: 1.2em;
   border: 1.5px solid #00eaff;
   background: #0f2027;
-  background-image: url('/fondoasistentedeportivo.jpg');
+  background-image: url('/static/fondoasistentedeportivo.jpg');
   background-size: cover;
   background-position: center;
   background-blend-mode: overlay;
@@ -154,6 +164,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

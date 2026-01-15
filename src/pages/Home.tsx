@@ -54,7 +54,7 @@ const Home = () => {
       title: 'AthenaBall',
       description: 'Análisis avanzado de baloncesto con IA.',
       icon: <Box component="img" src="/basketball.svg" alt="AthenaBall Icon" sx={{ width: 40, height: 40 }} />,
-      path: '/',
+      path: '/athenaball',
       target: '_blank',
     },
   ];
