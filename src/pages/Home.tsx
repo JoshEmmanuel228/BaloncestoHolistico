@@ -1,4 +1,4 @@
-import { Box, Container, Grid, Typography, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Container, Grid, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import {
   FitnessCenter as TrainingIcon,
@@ -11,8 +11,7 @@ import BasketballCourt from '../components/BasketballCourt';
 import HoloCard from '../components/HoloCard';
 
 const Home = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
 
   const modules = [
     {

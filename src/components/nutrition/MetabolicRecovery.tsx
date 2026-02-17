@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Typography, Paper, Grid, Switch, FormControlLabel, Slider, Chip, Collapse, IconButton } from '@mui/material';
+import { Box, Typography, Paper, Grid, Switch, FormControlLabel, Slider, Chip, Collapse } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import HealingIcon from '@mui/icons-material/Healing';
 import SpaIcon from '@mui/icons-material/Spa';

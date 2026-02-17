@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Box, Typography, Paper, Grid, Slider, Button, TextField } from '@mui/material';
 import OpacityIcon from '@mui/icons-material/Opacity';
 import { motion } from 'framer-motion';

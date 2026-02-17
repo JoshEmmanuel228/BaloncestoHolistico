@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Box, Typography, Paper, Slider, Grid, Avatar } from '@mui/material';
 import { motion } from 'framer-motion';
 import SportsBasketballIcon from '@mui/icons-material/SportsBasketball';

@@ -62,7 +62,7 @@ const BreathingExercise = () => {
     };
 
     const getDuration = () => {
-        const { inhale, hold, exhale } = patterns[currentPattern];
+        const { inhale, exhale } = patterns[currentPattern];
         switch (phase) {
             case 'inhale': return inhale;
             case 'hold':

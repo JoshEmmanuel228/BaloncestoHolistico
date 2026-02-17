@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Typography, Paper, Grid, Chip, Divider } from '@mui/material';
+import { Box, Typography, Paper, Grid, Divider } from '@mui/material';
 import { motion } from 'framer-motion';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import BoltIcon from '@mui/icons-material/Bolt';
