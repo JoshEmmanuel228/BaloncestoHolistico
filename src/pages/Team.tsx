@@ -1,238 +1,279 @@
-import React from 'react';
-import '../styles/sectionModernBackgrounds.css';
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Tabs,
-  Tab,
-  Avatar,
-  Chip,
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import {
-  Groups as TeamIcon,
-  EmojiEvents as LeadershipIcon,
-  Psychology as PsychologyIcon,
-  TrendingUp as GrowthIcon,
-} from '@mui/icons-material';
-import YouTubeVideo from '../components/YouTubeVideo';
-import TabPanel from '../components/TabPanel';
+import React, { useState } from 'react';
+import { Box, Typography, Tabs, Tab, Fade, Container, Paper } from '@mui/material';
+import { motion } from 'framer-motion';
+import GroupsIcon from '@mui/icons-material/Groups';
+import PsychologyIcon from '@mui/icons-material/Psychology';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
-const teamVideos = {
-  leadership: [
-    {
-      id: "X7Y0AyfXZ8k",
-      title: "Liderazgo en el Baloncesto",
-      description: "Cómo ser un líder efectivo en la cancha",
-    },
-    {
-      id: "Yt8KjQzQkqk",
-      title: "Comunicación en Equipo",
-      description: "Mejora la comunicación con tus compañeros",
-    },
-  ],
-  psychology: [
-    {
-      id: "Zt8Tb8yqX8Y",
-      title: "Psicología de Equipo",
-      description: "Desarrollo de la cohesión grupal",
-    },
-  ],
-  growth: [
-    {
-      id: "VBl0HxrQw1Y",
-      title: "Crecimiento del Equipo",
-      description: "Estrategias para el desarrollo del equipo",
-    },
-  ],
-};
+import LeadershipArchetypes from '../components/team/LeadershipArchetypes';
+import TeamCohesionRadar from '../components/team/TeamCohesionRadar';
+import CultureCode from '../components/team/CultureCode';
+
+// Tab Panel Component
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`team-tabpanel-${index}`}
+      aria-labelledby={`team-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Fade in={true} timeout={500}>
+          <Box sx={{ py: 3 }}>
+            {children}
+          </Box>
+        </Fade>
+      )}
+    </div>
+  );
+}
 
 const Team = () => {
-  const [value, setValue] = React.useState(0);
-  const navigate = useNavigate();
+  const [value, setValue] = useState(0);
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
-  const teamModules = [
-    {
-      id: "leadership",
-      title: "Liderazgo",
-      description: "Desarrollo de habilidades de liderazgo",
-      icon: <LeadershipIcon sx={{ fontSize: 40 }} />,
-      content: [
-        "Comunicación efectiva",
-        "Toma de decisiones",
-        "Motivación del equipo",
-      ],
-    },
-    {
-      id: "psychology",
-      title: "Psicología de Equipo",
-      description: "Desarrollo de la cohesión grupal",
-      icon: <PsychologyIcon sx={{ fontSize: 40 }} />,
-      content: [
-        "Confianza entre compañeros",
-        "Resolución de conflictos",
-        "Trabajo en equipo",
-      ],
-    },
-    {
-      id: "growth",
-      title: "Crecimiento",
-      description: "Estrategias para el desarrollo del equipo",
-      icon: <GrowthIcon sx={{ fontSize: 40 }} />,
-      content: [
-        "Establecimiento de metas",
-        "Retroalimentación constructiva",
-        "Celebración de logros",
-      ],
-    },
-  ];
-
-  const teamMembers = [
-    {
-      name: "Juan Pérez",
-      role: "Capitán",
-      avatar: "JP",
-      skills: ["Liderazgo", "Comunicación", "Tiro"],
-    },
-    {
-      name: "María García",
-      role: "Base",
-      avatar: "MG",
-      skills: ["Visión de juego", "Pase", "Defensa"],
-    },
-    {
-      name: "Carlos López",
-      role: "Ala-Pívot",
-      avatar: "CL",
-      skills: ["Rebote", "Defensa", "Poste"],
-    },
-  ];
-
   return (
-    <>
-      <div className="team-bg"></div>
-      <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-        <h1 className="futuristic-title">Equipo</h1>
-      <Tabs value={value} onChange={handleChange} aria-label="team tabs">
-        <Tab label="Módulos" />
-        <Tab label="Miembros" />
-        <Tab label="Videos" />
-      </Tabs>
+    <Box sx={{ minHeight: '100vh', pb: 10, position: 'relative', overflow: 'hidden' }}>
+      {/* Fixed Background Layer - Covers Entire Viewport */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: 'url("/digital-locker-bg.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          zIndex: 0
+        }}
+      />
 
-      <TabPanel value={value} index={0}>
-        <Grid container spacing={3}>
-          {teamModules.map((module) => (
-            <Grid item xs={12} md={4} key={module.id}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    {module.icon}
-                    <Typography variant="h6" sx={{ ml: 1 }}>
-                      {module.title}
+      {/* Fixed Dark Overlay */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'linear-gradient(to bottom, rgba(18,18,18,0.85) 0%, rgba(18,18,18,0.95) 100%)',
+          zIndex: 0
+        }}
+      />
+
+      {/* Content Wrapper */}
+      <Box sx={{ position: 'relative', zIndex: 1 }}>
+
+        {/* Hero Section */}
+        <Box
+          sx={{
+            pt: { xs: 6, md: 8 },
+            pb: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mb: 4,
+            position: 'relative'
+          }}
+        >
+          <Container maxWidth="lg" sx={{ textAlign: 'center', zIndex: 2 }}>
+            <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.8 }}>
+              <Typography variant="overline" sx={{ letterSpacing: 8, color: '#00e5ff', fontWeight: 'bold' }}>
+                Team DNA
+              </Typography>
+              <Typography variant="h1" fontWeight="900" sx={{ textTransform: 'uppercase', letterSpacing: -2, background: '-webkit-linear-gradient(45deg, #fff, #999)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: { xs: '3rem', md: '5rem' } }}>
+                The Locker Room
+              </Typography>
+              <Typography variant="h6" sx={{ color: 'gray', maxWidth: 600, mx: 'auto', mt: 2, fontSize: '1.1rem' }}>
+                La táctica gana partidos. La cultura gana campeonatos.
+                Bienvenido al centro de operaciones psicológicas del equipo.
+              </Typography>
+            </motion.div>
+          </Container>
+
+          {/* Professional Locker Room Image Showcase */}
+          <Container maxWidth="lg" sx={{ mt: 5, zIndex: 2 }}>
+            <motion.div
+              initial={{ y: 60, opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.3, ease: 'easeOut' }}
+            >
+              <Box
+                sx={{
+                  position: 'relative',
+                  borderRadius: { xs: 3, md: 5 },
+                  overflow: 'hidden',
+                  boxShadow: '0 25px 80px rgba(0,0,0,0.6), 0 8px 32px rgba(0,229,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  '&:hover .locker-img': {
+                    transform: 'scale(1.03)',
+                  },
+                  '&:hover .locker-overlay': {
+                    opacity: 0.3,
+                  },
+                }}
+              >
+                {/* The Image */}
+                <Box
+                  className="locker-img"
+                  component="img"
+                  src="/balones.JPG"
+                  alt="Professional Basketball Locker Room"
+                  sx={{
+                    width: '100%',
+                    height: { xs: 280, sm: 380, md: 480 },
+                    objectFit: 'cover',
+                    objectPosition: 'center 40%',
+                    display: 'block',
+                    transition: 'transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                  }}
+                />
+
+                {/* Cinematic Gradient Overlay */}
+                <Box
+                  className="locker-overlay"
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(180deg, rgba(18,18,18,0.15) 0%, rgba(18,18,18,0.05) 40%, rgba(18,18,18,0.5) 85%, rgba(18,18,18,0.85) 100%)',
+                    transition: 'opacity 0.8s ease',
+                    opacity: 1,
+                  }}
+                />
+
+                {/* Vignette Effect */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    boxShadow: 'inset 0 0 120px rgba(0,0,0,0.5)',
+                    pointerEvents: 'none',
+                  }}
+                />
+
+                {/* Bottom Caption Bar */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    px: { xs: 2, md: 4 },
+                    py: { xs: 1.5, md: 2.5 },
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    zIndex: 2,
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: '#00e5ff',
+                        fontWeight: 700,
+                        letterSpacing: 3,
+                        textTransform: 'uppercase',
+                        fontSize: '0.65rem',
+                      }}
+                    >
+                      Instalaciones del Equipo
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: '#fff',
+                        fontWeight: 800,
+                        letterSpacing: 1,
+                        textTransform: 'uppercase',
+                        fontSize: { xs: '0.9rem', md: '1.1rem' },
+                        textShadow: '0 2px 10px rgba(0,0,0,0.7)',
+                      }}
+                    >
+                      #TOGETHER — Championship Culture
                     </Typography>
                   </Box>
-                  <Typography color="text.secondary" paragraph>
-                    {module.description}
-                  </Typography>
-                  <List>
-                    {module.content.map((item, idx) => (
-                      <ListItem key={idx}>
-                        <ListItemIcon>
-                          <TeamIcon />
-                        </ListItemIcon>
-                        <ListItemText primary={item} />
-                      </ListItem>
-                    ))}
-                  </List>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ mt: 2 }}
-                    onClick={() => navigate(`/team/${module.id}`)}
-                  >
-                    Ver Contenido Completo
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </TabPanel>
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 3,
+                      bgcolor: '#00e5ff',
+                      borderRadius: 2,
+                      display: { xs: 'none', md: 'block' },
+                    }}
+                  />
+                </Box>
+              </Box>
+            </motion.div>
 
-      <TabPanel value={value} index={1}>
-        <Grid container spacing={3}>
-          {teamMembers.map((member, index) => (
-            <Grid item xs={12} md={4} key={index}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
-                      {member.avatar}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6">{member.name}</Typography>
-                      <Typography color="text.secondary">
-                        {member.role}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ mt: 2 }}>
-                    {member.skills.map((skill, idx) => (
-                      <Chip
-                        key={idx}
-                        label={skill}
-                        size="small"
-                        sx={{ mr: 1, mb: 1 }}
-                      />
-                    ))}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </TabPanel>
+            {/* Decorative Divider */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2 }}>
+              <Box sx={{ width: 60, height: 2, bgcolor: 'rgba(0,229,255,0.3)', borderRadius: 1 }} />
+            </Box>
+          </Container>
+        </Box>
 
-      <TabPanel value={value} index={2}>
-        <Typography variant="h5" gutterBottom>
-          Videos de Equipo
-        </Typography>
-        
-        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-          Liderazgo
-        </Typography>
-        {teamVideos.leadership.map((video, index) => (
-          <YouTubeVideo key={index} {...video} />
-        ))}
+        <Container maxWidth="lg">
+          <Paper
+            elevation={0}
+            sx={{
+              bgcolor: 'rgba(20, 20, 20, 0.6)',
+              backdropFilter: 'blur(20px)',
+              borderRadius: 6,
+              border: '1px solid rgba(255,255,255,0.08)',
+              overflow: 'hidden',
+              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)'
+            }}
+          >
+            <Tabs
+              value={value}
+              onChange={handleChange}
+              centered
+              textColor="inherit"
+              indicatorColor="secondary"
+              sx={{
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                '& .MuiTab-root': { py: 3, fontWeight: 'bold', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: 1 }
+              }}
+            >
+              <Tab icon={<GroupsIcon />} label="Identidad & Liderazgo" iconPosition="start" />
+              <Tab icon={<PsychologyIcon />} label="Psicología de Equipo" iconPosition="start" />
+              <Tab icon={<EmojiEventsIcon />} label="Código Cultural" iconPosition="start" />
+            </Tabs>
 
-        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-          Psicología de Equipo
-        </Typography>
-        {teamVideos.psychology.map((video, index) => (
-          <YouTubeVideo key={index} {...video} />
-        ))}
+            <Box sx={{ p: { xs: 2, md: 4 } }}>
+              <TabPanel value={value} index={0}>
+                <LeadershipArchetypes />
+              </TabPanel>
 
-        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-          Crecimiento
-        </Typography>
-        {teamVideos.growth.map((video, index) => (
-          <YouTubeVideo key={index} {...video} />
-        ))}
-      </TabPanel>
+              <TabPanel value={value} index={1}>
+                <TeamCohesionRadar />
+              </TabPanel>
+
+              <TabPanel value={value} index={2}>
+                <CultureCode />
+              </TabPanel>
+            </Box>
+          </Paper>
+        </Container>
       </Box>
-    </>
+    </Box>
   );
 };
 

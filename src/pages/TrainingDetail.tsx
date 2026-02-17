@@ -4,6 +4,14 @@ import YouTubeVideo from "../components/YouTubeVideo";
 import { trainingModules } from "../data/trainingData";
 import { AutoGraph as MetricsIcon } from '@mui/icons-material';
 
+import StrengthAnatomy from "../components/training/StrengthAnatomy";
+import CardioMetabolism from "../components/training/CardioMetabolism";
+import ShootingTechnique from "../components/training/ShootingTechnique";
+import PlyoJump from "../components/training/PlyoJump";
+import AgilityLadder from "../components/training/AgilityLadder";
+import MobilitySkeleton from "../components/training/MobilitySkeleton";
+import GameTacticsBoard from "../components/training/GameTacticsBoard";
+
 const TrainingDetail = () => {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
@@ -26,6 +34,20 @@ const TrainingDetail = () => {
     );
   }
 
+  // Map moduleId to Interactive Component
+  const renderInteractiveComponent = () => {
+    switch (moduleId) {
+      case 'strength': return <StrengthAnatomy />;
+      case 'cardio': return <CardioMetabolism />;
+      case 'technical': return <ShootingTechnique />;
+      case 'plyometrics': return <PlyoJump />;
+      case 'agility': return <AgilityLadder />;
+      case 'mobility': return <MobilitySkeleton />;
+      case 'gameiq': return <GameTacticsBoard />;
+      default: return null;
+    }
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Button
@@ -37,12 +59,18 @@ const TrainingDetail = () => {
         Volver a Entrenamiento
       </Button>
 
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
         {module.title}
       </Typography>
+
+      {/* Interactive Simulation Section */}
+      <Box sx={{ my: 4 }}>
+        {renderInteractiveComponent()}
+      </Box>
+
       {
         module.fullDescription ? (
-          <Typography color="text.secondary" paragraph sx={{ whiteSpace: 'pre-line' }}>
+          <Typography color="text.secondary" paragraph sx={{ whiteSpace: 'pre-line', fontSize: '1.1rem' }}>
             {module.fullDescription}
           </Typography>
         ) : (
@@ -69,7 +97,7 @@ const TrainingDetail = () => {
                     label={metric}
                     variant="outlined"
                     color="primary"
-                    sx={{ borderColor: 'rgba(0, 255, 255, 0.5)', color: '#fff' }}
+                    sx={{ borderColor: 'rgba(0, 255, 255, 0.5)', color: '#000', fontWeight: 'bold' }}
                   />
                 </Grid>
               ))}
@@ -78,8 +106,8 @@ const TrainingDetail = () => {
         )
       }
 
-      <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
-        Ejercicios
+      <Typography variant="h5" gutterBottom sx={{ mt: 4, fontWeight: 'bold' }}>
+        Ejercicios Detallados
       </Typography>
       <Grid container spacing={3}>
         {module.exercises.map((exercise, index) => (

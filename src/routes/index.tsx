@@ -11,11 +11,13 @@ import TrainingDetail from "../pages/TrainingDetail";
 import NutritionDetail from "../pages/NutritionDetail";
 import MentalDetail from "../pages/MentalDetail";
 import Assistant from '../pages/Assistant';
+import ErrorPage from "../pages/ErrorPage";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+    errorElement: <ErrorPage />,
     children: [
       {
         path: "/",
@@ -65,6 +67,15 @@ const router = createBrowserRouter([
       },
     ],
   },
-]);
+], {
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true,
+    v7_fetcherPersist: true,
+    v7_normalizeFormMethod: true,
+    v7_partialHydration: true,
+    v7_skipActionErrorRevalidation: true,
+  },
+} as any);
 
 export default router; 

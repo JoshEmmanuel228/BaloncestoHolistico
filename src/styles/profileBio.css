@@ -1,0 +1,184 @@
+/* profileBio.css */
+
+/* Advanced Bio-Metric Interface Styling */
+.bio-interface-container {
+    min-height: 100vh;
+    position: relative;
+    background-color: #050a10;
+    color: #a0c0e0;
+    font-family: 'Rajdhani', sans-serif;
+    overflow-x: hidden;
+}
+
+/* DNA Background Animation */
+.dna-bg-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.15;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%2300eaff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+    animation: dna-scroll 60s linear infinite;
+}
+
+@keyframes dna-scroll {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 0 1000px;
+    }
+}
+
+/* Scanner Layout */
+.bio-scanner-frame {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    margin: 0 auto;
+    padding: 5px;
+    background: conic-gradient(from 0deg, transparent 0%, #00eaff 50%, transparent 100%);
+    animation: spin-slow 4s linear infinite;
+    box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bio-scanner-inner {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: #000;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    border: 2px solid rgba(0, 234, 255, 0.5);
+}
+
+.scan-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #00eaff;
+    box-shadow: 0 0 15px #00eaff;
+    z-index: 5;
+    animation: scan-vertical 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes spin-slow {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes scan-vertical {
+    from {
+        top: 0%;
+        opacity: 0.5;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    to {
+        top: 100%;
+        opacity: 0.5;
+    }
+}
+
+/* Data Terminals */
+.data-terminal {
+    background: rgba(10, 25, 40, 0.7);
+    border: 1px solid rgba(0, 234, 255, 0.3);
+    border-left: 3px solid #00eaff;
+    padding: 1.5rem;
+    backdrop-filter: blur(8px);
+    position: relative;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.data-terminal:hover {
+    box-shadow: 0 0 20px rgba(0, 234, 255, 0.15);
+    border-color: #00eaff;
+}
+
+.data-terminal::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    color: #00eaff;
+    background: #050a10;
+    padding: 0 8px;
+    border: 1px solid rgba(0, 234, 255, 0.3);
+}
+
+/* Input Fields Override */
+.bio-input .MuiInputBase-root {
+    font-family: 'Rajdhani', monospace !important;
+    color: #00eaff !important;
+    background: rgba(0, 0, 0, 0.3);
+    font-size: 1.1rem !important;
+}
+
+.bio-input .MuiInputLabel-root {
+    color: rgba(0, 234, 255, 0.7) !important;
+    font-family: 'Orbitron', sans-serif !important;
+    letter-spacing: 1px;
+}
+
+.bio-input .MuiOutlinedInput-notchedOutline {
+    border-color: rgba(0, 234, 255, 0.3) !important;
+}
+
+.bio-input:hover .MuiOutlinedInput-notchedOutline {
+    border-color: #00eaff !important;
+}
+
+.bio-input .Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: #00eaff !important;
+    box-shadow: 0 0 10px rgba(0, 234, 255, 0.3);
+}
+
+/* Action Buttons */
+.bio-btn {
+    background: linear-gradient(90deg, rgba(0, 234, 255, 0.1) 0%, rgba(0, 234, 255, 0.2) 100%);
+    border: 1px solid #00eaff;
+    color: #00eaff;
+    font-family: 'Orbitron', sans-serif;
+    padding: 10px 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+    overflow: hidden;
+}
+
+.bio-btn:hover {
+    background: rgba(0, 234, 255, 0.3);
+    box-shadow: 0 0 20px rgba(0, 234, 255, 0.4);
+}

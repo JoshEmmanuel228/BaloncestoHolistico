@@ -14,6 +14,8 @@ import {
   ListItemText,
   Tabs,
   Tab,
+  Container,
+  Paper,
 } from '@mui/material';
 import { useNavigate } from "react-router-dom";
 import BananaIcon from '../components/BananaIcon';
@@ -81,7 +83,7 @@ const Nutrition = () => {
       id: "mealPlan",
       title: "Plan de Alimentación Diario",
       description: "Plan nutricional completo para jugadores de baloncesto",
-  icon: <BananaIcon sx={{ fontSize: 40, color: 'text.secondary' }} />,
+      icon: <BananaIcon sx={{ fontSize: 40, color: 'text.secondary' }} />,
       badge: { label: 'Planes', color: 'primary', icon: <LocalDiningIcon sx={{ fontSize: 18 }} /> },
       meals: [
         "Desayuno: Avena con frutas y proteína",
@@ -126,96 +128,242 @@ const Nutrition = () => {
         "Prevención de lesiones y bienestar mental",
       ],
     },
+    {
+      id: "metabolicRecovery",
+      title: "Cura Metabólica & Lesiones",
+      description: "Recuperación acelerada y protocolos anti-inflamatorios",
+      icon: <BananaIcon sx={{ fontSize: 40, color: 'text.secondary' }} />,
+      badge: { label: 'Salud', color: 'error', icon: <LocalDiningIcon sx={{ fontSize: 18 }} /> },
+      meals: [
+        "Protocolos para lesiones (Músculo vs Hueso)",
+        "Alimentos anti-inflamatorios (Cúrcuma, Omega-3)",
+        "Salud intestinal y absorción",
+      ],
+    },
+    {
+      id: "travelNutrition",
+      title: "Nutrición de Viaje & Torneos",
+      description: "Mantén el rendimiento fuera de casa",
+      icon: <BananaIcon sx={{ fontSize: 40, color: 'text.secondary' }} />,
+      badge: { label: 'Viaje', color: 'info', icon: <SportsScoreIcon sx={{ fontSize: 18 }} /> },
+      meals: [
+        "Estrategias para Aeropuertos y Hoteles",
+        "Guía de supervivencia Fast Food",
+        "Manejo del Jet Lag e hidratación en vuelo",
+      ],
+    },
   ];
 
   return (
-    <>
-      <div className="nutrition-bg"></div>
-      <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-        <h1 className="futuristic-title">Nutrición</h1>
-      <Tabs value={value} onChange={handleChange} aria-label="nutrition tabs">
-        <Tab label="Planes" />
-        <Tab label="Videos" />
-      </Tabs>
+    <Box sx={{ minHeight: '100vh', pb: 10, position: 'relative', overflow: 'hidden' }}>
+      {/* Fixed Background Layer - Covers Entire Viewport */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: 'url("https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          zIndex: 0
+        }}
+      />
 
-      <TabPanel value={value} index={0}>
-        <Grid container spacing={3}>
-          {nutritionModules.map((module) => (
-            <Grid item xs={12} md={4} key={module.id}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2, justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      {getAreaIcon(module.id, 40)}
-                      <Typography variant="h6" sx={{ ml: 1 }}>
-                        {module.title}
-                      </Typography>
-                    </Box>
-                    {module.badge && (
-                      <Chip
-                        label={module.badge.label}
-                        color={module.badge.color as any}
-                        size="small"
-                        icon={module.badge.icon}
-                      />
-                    )}
-                  </Box>
-                  <Typography color="text.secondary" paragraph>
-                    {module.description}
-                  </Typography>
-                  <List>
-                    {module.meals.map((meal, idx) => (
-                      <ListItem key={idx}>
-                        <ListItemIcon>
-                          {getAreaIcon(module.id, 20)}
-                        </ListItemIcon>
-                        <ListItemText primary={meal} />
-                      </ListItem>
-                    ))}
-                  </List>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ mt: 2 }}
-                    onClick={() => navigate(`/nutrition/${module.id}`)}
-                  >
-                    Ver Plan Completo
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </TabPanel>
+      {/* Fixed Dark Overlay */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'linear-gradient(to bottom, rgba(18,18,18,0.85) 0%, rgba(18,18,18,0.95) 100%)',
+          zIndex: 0
+        }}
+      />
 
-      <TabPanel value={value} index={1}>
-        <Typography variant="h5" gutterBottom>
-          Videos de Nutrición
-        </Typography>
-        
-        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-          Planes de Alimentación
-        </Typography>
-        {nutritionVideos.mealPlan.map((video, index) => (
-          <YouTubeVideo key={index} {...video} />
-        ))}
+      {/* Content Wrapper */}
+      <Box sx={{ position: 'relative', zIndex: 1 }}>
 
-        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-          Nutrición Pre-Partido
-        </Typography>
-        {nutritionVideos.preGame.map((video, index) => (
-          <YouTubeVideo key={index} {...video} />
-        ))}
+        {/* Hero Section */}
+        <Box
+          sx={{
+            height: 400,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mb: 4,
+            position: 'relative'
+          }}
+        >
+          <Container maxWidth="lg" sx={{ textAlign: 'center', zIndex: 2 }}>
+            <Typography variant="overline" sx={{ letterSpacing: 8, color: '#00e5ff', fontWeight: 'bold' }}>
+              Elite Fueling
+            </Typography>
+            <Typography variant="h1" fontWeight="900" sx={{ textTransform: 'uppercase', letterSpacing: -2, background: '-webkit-linear-gradient(45deg, #fff, #999)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: { xs: '3rem', md: '5rem' } }}>
+              Performance Nutrition
+            </Typography>
+            <Typography variant="h6" sx={{ color: 'gray', maxWidth: 600, mx: 'auto', mt: 2, fontSize: '1.1rem' }}>
+              Combustible de precisión para atletas de alto rendimiento.
+              Recuperación, energía y optimización metabólica.
+            </Typography>
+          </Container>
+        </Box>
 
-        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-          Hidratación
-        </Typography>
-        {nutritionVideos.hydration.map((video, index) => (
-          <YouTubeVideo key={index} {...video} />
-        ))}
-      </TabPanel>
+        <Container maxWidth="lg">
+          <Paper
+            elevation={0}
+            sx={{
+              bgcolor: 'rgba(20, 20, 20, 0.6)',
+              backdropFilter: 'blur(20px)',
+              borderRadius: 6,
+              border: '1px solid rgba(255,255,255,0.08)',
+              overflow: 'hidden',
+              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)'
+            }}
+          >
+            <Tabs
+              value={value}
+              onChange={handleChange}
+              centered
+              textColor="inherit"
+              indicatorColor="secondary"
+              sx={{
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                '& .MuiTab-root': { py: 3, fontWeight: 'bold', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: 1 }
+              }}
+            >
+              <Tab label="Módulos & Planes" />
+              <Tab label="Biblioteca de Video" />
+            </Tabs>
+
+            <Box sx={{ p: { xs: 2, md: 4 } }}>
+              <TabPanel value={value} index={0}>
+                <Grid container spacing={3}>
+                  {nutritionModules.map((module) => (
+                    <Grid item xs={12} md={4} key={module.id}>
+                      <Card
+                        sx={{
+                          height: '100%',
+                          bgcolor: 'rgba(30, 30, 30, 0.6)',
+                          backdropFilter: 'blur(10px)',
+                          color: 'white',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: 4,
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-5px)',
+                            bgcolor: 'rgba(40, 40, 40, 0.8)',
+                            border: '1px solid rgba(0, 229, 255, 0.3)',
+                            boxShadow: '0 10px 20px rgba(0,0,0,0.5)'
+                          }
+                        }}
+                      >
+                        <CardContent sx={{ p: 3 }}>
+                          <Box sx={{ display: "flex", alignItems: "center", mb: 2, justifyContent: 'space-between' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              {getAreaIcon(module.id, 40)}
+                              <Typography variant="h6" sx={{ ml: 2, fontWeight: 'bold' }}>
+                                {module.title}
+                              </Typography>
+                            </Box>
+                            {module.badge && (
+                              <Chip
+                                label={module.badge.label}
+                                color={module.badge.color as any}
+                                size="small"
+                                icon={module.badge.icon}
+                                sx={{ fontWeight: 'bold' }}
+                              />
+                            )}
+                          </Box>
+                          <Typography color="#bdbdbd" paragraph sx={{ minHeight: 48, fontSize: '0.9rem' }}>
+                            {module.description}
+                          </Typography>
+                          <List sx={{ mb: 2 }}>
+                            {module.meals.map((meal, idx) => (
+                              <ListItem key={idx} sx={{ py: 0.5, px: 0 }}>
+                                <ListItemIcon sx={{ minWidth: 32 }}>
+                                  {getAreaIcon(module.id, 18)}
+                                </ListItemIcon>
+                                <ListItemText
+                                  primary={meal}
+                                  primaryTypographyProps={{ fontSize: '0.85rem', color: '#e0e0e0' }}
+                                />
+                              </ListItem>
+                            ))}
+                          </List>
+                          <Button
+                            variant="outlined"
+                            fullWidth
+                            sx={{
+                              mt: 'auto',
+                              textTransform: 'none',
+                              borderColor: 'rgba(255,255,255,0.2)',
+                              color: 'white',
+                              '&:hover': {
+                                borderColor: '#00e5ff',
+                                color: '#00e5ff',
+                                bgcolor: 'rgba(0, 229, 255, 0.05)'
+                              }
+                            }}
+                            onClick={() => navigate(`/nutrition/${module.id}`)}
+                          >
+                            Acceder al Plan
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </TabPanel>
+
+              <TabPanel value={value} index={1}>
+                <Typography variant="h5" gutterBottom sx={{ color: 'white', fontWeight: 'bold', mb: 3 }}>
+                  Biblioteca de Rendimiento
+                </Typography>
+
+                <Typography variant="h6" gutterBottom sx={{ mt: 3, color: '#00e5ff' }}>
+                  Planes de Alimentación
+                </Typography>
+                <Grid container spacing={3}>
+                  {nutritionVideos.mealPlan.map((video, index) => (
+                    <Grid item xs={12} md={6} key={index}>
+                      <YouTubeVideo {...video} />
+                    </Grid>
+                  ))}
+                </Grid>
+
+                <Typography variant="h6" gutterBottom sx={{ mt: 4, color: '#76ff03' }}>
+                  Nutrición Pre-Partido
+                </Typography>
+                <Grid container spacing={3}>
+                  {nutritionVideos.preGame.map((video, index) => (
+                    <Grid item xs={12} md={6} key={index}>
+                      <YouTubeVideo {...video} />
+                    </Grid>
+                  ))}
+                </Grid>
+
+                <Typography variant="h6" gutterBottom sx={{ mt: 4, color: '#00e5ff' }}>
+                  Hidratación
+                </Typography>
+                <Grid container spacing={3}>
+                  {nutritionVideos.hydration.map((video, index) => (
+                    <Grid item xs={12} md={6} key={index}>
+                      <YouTubeVideo {...video} />
+                    </Grid>
+                  ))}
+                </Grid>
+              </TabPanel>
+            </Box>
+          </Paper>
+        </Container>
       </Box>
-    </>
+    </Box>
   );
 };
 

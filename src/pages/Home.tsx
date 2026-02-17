@@ -1,15 +1,5 @@
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  useTheme,
-} from '@mui/material';
-import '../styles/homeBackground.css';
-import '../styles/sectionModernBackgrounds.css';
-
+import { Box, Container, Grid, Typography, useTheme, useMediaQuery } from '@mui/material';
+import { motion } from 'framer-motion';
 import {
   FitnessCenter as TrainingIcon,
   Psychology as MentalIcon,
@@ -18,24 +8,23 @@ import {
 import BananaIcon from '../components/BananaIcon';
 import BasketballAnalysis from '../components/BasketballAnalysis';
 import BasketballCourt from '../components/BasketballCourt';
-import { useNavigate } from 'react-router-dom';
-
+import HoloCard from '../components/HoloCard';
 
 const Home = () => {
   const theme = useTheme();
-  const navigate = useNavigate();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const modules = [
     {
       title: 'Entrenamiento',
       description: 'Mejora tus habilidades físicas y técnicas con rutinas personalizadas.',
-      icon: <TrainingIcon sx={{ fontSize: 40 }} />,
+      icon: <TrainingIcon />,
       path: '/training',
     },
     {
       title: 'Preparación Mental',
       description: 'Desarrolla tu fortaleza mental y mejora tu rendimiento en la cancha.',
-      icon: <MentalIcon sx={{ fontSize: 40 }} />,
+      icon: <MentalIcon />,
       path: '/mental',
     },
     {
@@ -47,7 +36,7 @@ const Home = () => {
     {
       title: 'Equipo',
       description: 'Fortalece la dinámica de equipo y el liderazgo.',
-      icon: <TeamIcon sx={{ fontSize: 40 }} />,
+      icon: <TeamIcon />,
       path: '/team',
     },
     {
@@ -60,105 +49,174 @@ const Home = () => {
   ];
 
   return (
-    <>
-      <div className="home-bg-balon"></div>
+    <Box sx={{ minHeight: '100vh', pb: 10, position: 'relative', overflowX: 'hidden', fontFamily: "'Orbitron', sans-serif" }}>
+      {/* Fixed Background Layer - Fantastic Court Image */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: 'url("https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=2000&q=90")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          zIndex: 0
+        }}
+      />
+
+      {/* Cinematic Gradient Overlay */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'radial-gradient(circle at center, rgba(10,20,40,0.4) 0%, rgba(5,10,20,0.8) 70%, rgba(0,0,0,0.95) 100%)',
+          zIndex: 0
+        }}
+      />
+
+      {/* Grid Overlay for Tech Feel */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundImage: 'linear-gradient(rgba(0, 234, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 234, 255, 0.03) 1px, transparent 1px)',
+          backgroundSize: '30px 30px',
+          zIndex: 0,
+          pointerEvents: 'none'
+        }}
+      />
+
+      {/* Content Wrapper */}
       <Box sx={{ position: 'relative', zIndex: 1 }}>
-        <Typography variant="h2" gutterBottom className="readable-text">
-          Bienvenido a Basketball Holístico
-        </Typography>
 
-        <Typography variant="h5" color="text.secondary" paragraph className="readable-text">
-          Tu plataforma integral para el desarrollo completo como jugador de baloncesto.
-        </Typography>
+        {/* Cinematic Hero Section */}
+        <Box
+          sx={{
+            height: { xs: '60vh', md: '75vh' },
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mb: 4,
+            position: 'relative'
+          }}
+        >
+          <Container maxWidth="lg" sx={{ textAlign: 'center', zIndex: 2 }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+            >
+              <Typography variant="overline" sx={{ letterSpacing: 12, color: '#00eaff', fontWeight: 'bold', fontSize: { xs: '0.7rem', md: '1rem' }, textShadow: '0 0 10px rgba(0,234,255,0.7)' }}>
+                SYSTEM ONLINE // ACCESS GRANTED
+              </Typography>
 
-        <Grid container spacing={3} sx={{ mt: 2 }}>
-          {modules.map((module) => (
-            <Grid item xs={12} sm={6} md={3} key={module.title}>
-              <Card
+              <Typography
+                variant="h1"
                 sx={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
-                  color: 'white',
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-10px) scale(1.02)',
-                    boxShadow: '0 0 20px rgba(255, 215, 0, 0.2), 0 0 10px rgba(255, 215, 0, 0.1)', // Golden glow
-                    border: '1px solid rgba(255, 215, 0, 0.3)',
-                    background: 'rgba(255, 255, 255, 0.08)',
-                  },
+                  fontFamily: "'Orbitron', sans-serif",
+                  fontWeight: 900,
+                  textTransform: 'uppercase',
+                  letterSpacing: { xs: 2, md: 5 },
+                  color: '#fff',
+                  fontSize: { xs: '2.5rem', md: '5.5rem' },
+                  lineHeight: 1,
+                  mb: 2,
+                  textShadow: '0 0 20px rgba(0,234,255,0.5), 2px 2px 0px rgba(255,0,255,0.5)'
                 }}
               >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      mb: 2,
-                      color: theme.palette.primary.main,
-                    }}
-                  >
-                    {module.icon}
-                  </Box>
-                  <Typography variant="h6" gutterBottom align="center">
-                    {module.title}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    align="center"
-                    paragraph
-                  >
-                    {module.description}
-                  </Typography>
-                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                    <Button
-                      variant="contained"
-                      onClick={() => {
-                        if (module.target) {
-                          window.open(module.path, module.target);
-                        } else {
-                          navigate(module.path);
-                        }
-                      }}
-                      sx={{
-                        mt: 1,
-                        background: 'linear-gradient(45deg, #FFD700 30%, #FF8C00 90%)',
-                        border: 0,
-                        borderRadius: '20px',
-                        boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .1)',
-                        color: 'black',
-                        fontWeight: 'bold',
-                        padding: '10px 30px',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          background: 'linear-gradient(45deg, #FF8C00 30%, #FFD700 90%)',
-                          boxShadow: '0 0 15px rgba(255, 215, 0, 0.5)',
-                          transform: 'scale(1.05)',
-                        }
-                      }}
-                    >
-                      Explorar
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                BASKETBALL<br />
+                <span style={{ color: '#FF8C00', textShadow: '0 0 20px rgba(255, 140, 0, 0.6)' }}>HOLÍSTICO</span>
+              </Typography>
 
-        {/* Nueva sección de texto detallado */}
-        <BasketballAnalysis />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8, duration: 1 }}
+              >
+                <Typography variant="h6" sx={{ fontFamily: "'Rajdhani', sans-serif", color: 'rgba(255,255,255,0.8)', maxWidth: 700, mx: 'auto', mt: 3, fontSize: { xs: '1.1rem', md: '1.5rem' }, letterSpacing: 1 }}>
+                  PLATAFORMA DE DESARROLLO INTEGRAL
+                </Typography>
 
-        {/* Cancha 3D Futurista */}
-        <BasketballCourt />
-      </Box >
-    </>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mt: 2 }}>
+                  <Typography variant="caption" sx={{ color: '#FFD700' }}>● CUERPO</Typography>
+                  <Typography variant="caption" sx={{ color: '#00eaff' }}>● MENTE</Typography>
+                  <Typography variant="caption" sx={{ color: '#ff00ff' }}>● EQUIPO</Typography>
+                </Box>
+              </motion.div>
+            </motion.div>
+          </Container>
+
+          {/* Scroll Indicator */}
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            style={{ position: 'absolute', bottom: 40, opacity: 0.7 }}
+          >
+            <Typography variant="caption" sx={{ color: '#00eaff', letterSpacing: 2 }}>SCROLL TO INITIALIZE</Typography>
+          </motion.div>
+        </Box>
+
+        {/* Command Center Modules */}
+        <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6 }, mb: 10 }}>
+          <Box sx={{ mb: 4, borderLeft: '4px solid #00eaff', pl: 2 }}>
+            <Typography variant="h4" sx={{ color: '#fff', fontFamily: "'Orbitron', sans-serif", textTransform: 'uppercase' }}>
+              Módulos de Entrenamiento
+            </Typography>
+            <Typography variant="subtitle1" sx={{ color: 'rgba(0,234,255,0.7)', fontFamily: "'Rajdhani', sans-serif" }}>
+              Selecciona una interfaz neuronal
+            </Typography>
+          </Box>
+
+          <Grid container spacing={4}>
+            {modules.map((module, index) => (
+              <Grid item xs={12} sm={6} md={2.4} key={module.title}>
+                <HoloCard
+                  title={module.title}
+                  description={module.description}
+                  icon={module.icon}
+                  path={module.path}
+                  target={module.target}
+                  delay={index * 0.1}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+
+        {/* Tactical Analysis Section */}
+        <Box sx={{
+          position: 'relative',
+          py: 8,
+          backgroundImage: 'linear-gradient(rgba(0,10,20,0.85), rgba(0,10,20,0.9)), url("/1x1_una_cancha_de_baloncesto_alucina.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          borderTop: '2px solid #00eaff',
+          borderBottom: '2px solid #00eaff',
+          boxShadow: '0 0 30px rgba(0, 234, 255, 0.2)'
+        }}>
+          <Container maxWidth="xl">
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, justifyContent: 'center' }}>
+              <Box sx={{ width: 12, height: 12, bgcolor: '#ff00ff', borderRadius: '50%', mr: 2, boxShadow: '0 0 15px #ff00ff' }} />
+              <Typography variant="h4" sx={{ color: '#fff', fontFamily: "'Orbitron', sans-serif", letterSpacing: 3, textShadow: '0 0 10px rgba(255,255,255,0.5)' }}>
+                TACTICAL ANALYSIS VIEW
+              </Typography>
+              <Box sx={{ width: 12, height: 12, bgcolor: '#ff00ff', borderRadius: '50%', ml: 2, boxShadow: '0 0 15px #ff00ff' }} />
+            </Box>
+            <BasketballAnalysis />
+            <BasketballCourt />
+          </Container>
+        </Box>
+
+      </Box>
+    </Box>
   );
 };
 
-export default Home; 
+export default Home;
