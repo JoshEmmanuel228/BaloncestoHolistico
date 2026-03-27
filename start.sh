@@ -1,10 +1,16 @@
 #!/bin/bash
+# start.sh
 
-# Start Motor Ninja (Node.js) in the background
-echo "🚀 Iniciando Motor Ninja (WhatsApp)..."
-cd AthenaBall_WebApp && node motor-whatsapp.js &
+# Asegurarse de que PORT esté definido
+export PORT=${PORT:-10000}
 
-# Start Backend (Flask) in the foreground
-echo "🐍 Iniciando Backend (Flask)..."
-cd .. && sed -i "s/localhost:3001/0.0.0.0:$PORT/g" AthenaBall_WebApp/app.py
-cd AthenaBall_WebApp && python app.py
+echo "🚀 Iniciando Motor Ninja (WhatsApp) en segundo plano..."
+cd /app/AthenaBall_WebApp && node motor-whatsapp.js &
+
+echo "🐍 Configurando y arrancando Backend (Flask)..."
+cd /app/AthenaBall_WebApp
+# Reemplazar localhost por 0.0.0.0 para que sea accesible externamente
+sed -i "s/localhost:3001/0.0.0.0:$PORT/g" app.py
+
+# Arrancar Flask
+python app.py
