@@ -5,7 +5,10 @@ FROM python:3.12-slim
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
+    git \
     procps \
+    build-essential \
+    python3-dev \
     ca-certificates \
     libnss3 \
     libatk1.0-0 \
@@ -42,8 +45,8 @@ RUN npm install
 COPY AthenaBall_WebApp/package.json ./AthenaBall_WebApp/
 RUN cd AthenaBall_WebApp && npm install
 
-COPY AthenaBall_WebApp/requirements.txt ./AthenaBall_WebApp/
-RUN pip install --no-cache-dir -r AthenaBall_WebApp/requirements.txt
+COPY AthenaBall_WebApp/requirements_render.txt ./AthenaBall_WebApp/
+RUN pip install --no-cache-dir -r AthenaBall_WebApp/requirements_render.txt
 
 # Copy the rest of the application
 COPY . .
