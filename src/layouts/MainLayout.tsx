@@ -21,8 +21,12 @@ import {
   FitnessCenter as TrainingIcon,
   Psychology as MentalIcon,
   Group as TeamIcon,
+  Instagram as InstagramIcon,
+  Facebook as FacebookIcon,
 } from '@mui/icons-material';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Menu as MenuIcon } from '@mui/icons-material';
 import sidebarBackground from '../assets/IMG_0227.JPG';
 
@@ -31,8 +35,8 @@ const drawerWidth = 240;
 const menuItems = [
   { text: 'Inicio', icon: <HomeIcon />, path: '/' },
   { text: 'Perfil', icon: <PersonIcon />, path: '/profile' },
-  { text: 'Entrenamiento', icon: <TrainingIcon />, path: '/training' },
   { text: 'Preparación Mental', icon: <MentalIcon />, path: '/mental' },
+  { text: 'Entrenamiento', icon: <TrainingIcon />, path: '/training' },
   {
     text: 'Nutrición',
     icon: (
@@ -57,11 +61,22 @@ const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const sidebarHideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
   const location = useLocation();
+
+  const userEmail = useSelector((state: RootState) => state.user.user?.email) || '';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -85,7 +100,10 @@ const MainLayout = () => {
             key={item.text}
             onClick={() => {
               if (item.target) {
-                window.open(item.path, item.target);
+                const url = item.path === '/athenaball' 
+                  ? `${item.path}?email=${encodeURIComponent(userEmail)}`
+                  : item.path;
+                window.open(url, item.target);
               } else {
                 navigate(item.path);
                 if (isMobile) {
@@ -138,9 +156,40 @@ const MainLayout = () => {
         </div>
       )}
 
-      {/* Botón de bienvenida */}
-      <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 1301 }}>
-        <Avatar className="user-avatar" onClick={() => setWelcomeOpen(true)} src="/basketball.svg" />
+      {/* Botón de bienvenida y redes sociales */}
+      <div style={{
+        position: 'fixed',
+        top: '16px',
+        right: '16px',
+        zIndex: 1301,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
+        opacity: isScrolled ? 0 : 1,
+        pointerEvents: isScrolled ? 'none' : 'auto',
+        transition: 'all 0.4s ease-in-out'
+      }}>
+        <a
+          href="https://www.instagram.com/abasketballfans/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: 'rgba(255, 255, 255, 0.4)', transition: 'all 0.3s ease', display: 'flex' }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(225, 48, 108, 0.9)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.4)'}
+        >
+          <InstagramIcon fontSize="large" />
+        </a>
+        <a
+          href="https://www.facebook.com/abasketballfans/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: 'rgba(255, 255, 255, 0.4)', transition: 'all 0.3s ease', display: 'flex' }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(24, 119, 242, 0.9)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.4)'}
+        >
+          <FacebookIcon fontSize="large" />
+        </a>
+        <Avatar className="user-avatar" onClick={() => setWelcomeOpen(true)} src="/basketball.svg" sx={{ cursor: 'pointer' }} />
       </div>
 
       {/* Modal de bienvenida */}
@@ -178,7 +227,11 @@ const MainLayout = () => {
                 <button className="profile-btn" onClick={() => { setWelcomeOpen(false); navigate('/asistente'); }}>
                   Ir a Asistente deportivo
                 </button>
-                <button className="profile-btn" onClick={() => { setWelcomeOpen(false); window.open('/athenaball', '_blank'); }}>
+                <button className="profile-btn" onClick={() => { 
+                  setWelcomeOpen(false); 
+                  const url = `/athenaball?email=${encodeURIComponent(userEmail)}`;
+                  window.open(url, '_blank'); 
+                }}>
                   Ir a AthenaBall
                 </button>
               </div>
@@ -261,9 +314,11 @@ const MainLayout = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: 0,
           width: '100%',
-          mt: '56px',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
         <Outlet />

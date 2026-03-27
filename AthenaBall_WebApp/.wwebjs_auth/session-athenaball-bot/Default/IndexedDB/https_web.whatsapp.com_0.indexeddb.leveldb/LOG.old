@@ -1,0 +1,31 @@
+2026/03/27-00:22:33.366 7084 Reusing MANIFEST C:\Users\joshy\OneDrive\BasketballHolistico\AthenaBall_WebApp\.wwebjs_auth\session-athenaball-bot\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/03/27-00:22:33.367 7084 Recovering log #470
+2026/03/27-00:22:33.403 7084 Reusing old log C:\Users\joshy\OneDrive\BasketballHolistico\AthenaBall_WebApp\.wwebjs_auth\session-athenaball-bot\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000470.log 
+2026/03/27-00:22:38.030 7084 Level-0 table #486: started
+2026/03/27-00:22:38.057 7084 Level-0 table #486: 1195945 bytes OK
+2026/03/27-00:22:38.058 7084 Delete type=0 #470
+2026/03/27-00:22:38.063 7084 Compacting 1@0 + 0@1 files
+2026/03/27-00:22:38.094 7084 Generated table #487@0: 28031 keys, 588649 bytes
+2026/03/27-00:22:38.111 7084 Generated table #488@0: 26 keys, 1599 bytes
+2026/03/27-00:22:38.111 7084 Compacted 1@0 + 0@1 files => 590248 bytes
+2026/03/27-00:22:38.112 7084 compacted to: files[ 0 2 15 0 0 0 0 ]
+2026/03/27-00:22:39.481 7084 Compacting 1@1 + 7@2 files
+2026/03/27-00:22:39.521 7084 Generated table #489@1: 7186 keys, 2126476 bytes
+2026/03/27-00:22:39.568 7084 Generated table #490@1: 61446 keys, 2200741 bytes
+2026/03/27-00:22:39.644 7084 Generated table #491@1: 99890 keys, 2249214 bytes
+2026/03/27-00:22:39.728 7084 Generated table #492@1: 100194 keys, 2249768 bytes
+2026/03/27-00:22:39.804 7084 Generated table #493@1: 98991 keys, 2247655 bytes
+2026/03/27-00:22:39.914 7084 Generated table #494@1: 88666 keys, 2239384 bytes
+2026/03/27-00:22:39.969 7084 Generated table #495@1: 15727 keys, 2208879 bytes
+2026/03/27-00:22:39.974 7084 Generated table #496@1: 107 keys, 114696 bytes
+2026/03/27-00:22:39.974 7084 Compacted 1@1 + 7@2 files => 15636813 bytes
+2026/03/27-00:22:39.974 7084 compacted to: files[ 0 1 16 0 0 0 0 ]
+2026/03/27-00:22:39.975 7084 Delete type=2 #474
+2026/03/27-00:22:39.975 7084 Delete type=2 #475
+2026/03/27-00:22:39.975 7084 Delete type=2 #476
+2026/03/27-00:22:39.975 7084 Delete type=2 #477
+2026/03/27-00:22:39.975 7084 Delete type=2 #478
+2026/03/27-00:22:39.975 7084 Delete type=2 #479
+2026/03/27-00:22:39.975 7084 Delete type=2 #480
+2026/03/27-00:22:39.975 7084 Delete type=2 #486
+2026/03/27-00:22:39.975 7084 Delete type=2 #487

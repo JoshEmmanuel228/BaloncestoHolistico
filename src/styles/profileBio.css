@@ -42,7 +42,6 @@
     margin: 0 auto;
     padding: 5px;
     background: conic-gradient(from 0deg, transparent 0%, #00eaff 50%, transparent 100%);
-    animation: spin-slow 4s linear infinite;
     box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
     display: flex;
     align-items: center;

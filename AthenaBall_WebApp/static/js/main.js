@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = fileInput.files[0];
         const formData = new FormData();
         formData.append('file', file);
+        if (window.USER_EMAIL) {
+            formData.append('user_email', window.USER_EMAIL);
+        }
 
         loader.style.display = 'block';
         resultsInfo.style.display = 'none';
@@ -37,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         imageDisplay.innerHTML = '<p>Subiendo y iniciando análisis... Esto puede tardar muchos minutos para videos largos.</p>';
 
         try {
-            const startResponse = await fetch('/analyze', {
+            const startResponse = await fetch('/api/analyze', {
                 method: 'POST',
                 body: formData,
             });
@@ -63,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function pollForResult(taskId) {
         const intervalId = setInterval(async () => {
             try {
-                const statusResponse = await fetch(`/status/${taskId}`);
+                const statusResponse = await fetch(`/api/status/${taskId}`);
                 if (!statusResponse.ok) {
                     clearInterval(intervalId);
                     throw new Error('No se pudo obtener el estado de la tarea');

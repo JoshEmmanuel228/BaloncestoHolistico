@@ -1,0 +1,7 @@
+2026/03/27-00:28:33.154 608 Reusing MANIFEST C:\Users\joshy\OneDrive\BasketballHolistico\AthenaBall_WebApp\.wwebjs_auth\session-athenaball-bot\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/03/27-00:28:33.155 608 Recovering log #485
+2026/03/27-00:28:33.161 608 Reusing old log C:\Users\joshy\OneDrive\BasketballHolistico\AthenaBall_WebApp\.wwebjs_auth\session-athenaball-bot\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000485.log 
+2026/03/27-00:28:37.617 608 Compacting 1@1 + 1@2 files
+2026/03/27-00:28:37.711 608 Generated table #498@1: 29663 keys, 1974973 bytes
+2026/03/27-00:28:37.711 608 Compacted 1@1 + 1@2 files => 1974973 bytes
+2026/03/27-00:28:37.712 608 compacted to: files[ 0 0 16 0 0 0 0 ]

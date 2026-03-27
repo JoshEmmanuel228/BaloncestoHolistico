@@ -58,6 +58,12 @@
             </div>
         </div>
     </main>
+    <script>
+        // Capture email from query params for use in main.js
+        const urlParams = new URLSearchParams(window.location.search);
+        window.USER_EMAIL = urlParams.get('email') || '';
+        console.log("Email capturado:", window.USER_EMAIL);
+    </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

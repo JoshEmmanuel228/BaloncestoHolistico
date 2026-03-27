@@ -1,12 +1,39 @@
 services:
+  # 1. Backend Service (Docker)
   - type: web
-    name: athenaball-webapp
+    name: athenaball-backend
     env: docker
-    region: oregon
-    plan: free
-    branch: main
-    numInstances: 1
-    healthCheckPath: /
+    plan: starter # Starter plan recommended for Puppeteer/Torch
+    region: ohio
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/
+    # Persistent Disk for WhatsApp Sessions
+    disk:
+      name: whatsapp-session-v1
+      mountPath: /app/AthenaBall_WebApp/.wwebjs_auth
+      sizeGB: 1
     envVars:
       - key: PORT
         value: 10000
+      - key: EMAIL_USER
+        sync: false # Set in Render Dashboard
+      - key: EMAIL_PASS
+        sync: false # Set in Render Dashboard
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/chromium
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: "true"
+
+  # 2. Frontend Static Site
+  - type: static
+    name: athenaball-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          name: athenaball-backend
+          type: web
+          property: host

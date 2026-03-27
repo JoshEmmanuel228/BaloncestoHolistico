@@ -1,10 +1,20 @@
 import os
+import json
 import cv2
 import numpy as np
 import traceback
 import uuid
 import multiprocessing
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify, render_template
+from dotenv import load_dotenv
+
+# --- Load Environment Variables ---
+# Look for .env in the parent directory (root)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(os.path.dirname(BASE_DIR), '.env'))
 
 # --- Dependency Checks ---
 try:
@@ -19,6 +29,46 @@ try:
     PILLOW_AVAILABLE = True
 except ImportError:
     PILLOW_AVAILABLE = False
+
+# --- Email Notification Logic ---
+def send_email_notification(to_email, subject, body):
+    """Sends an email notification using Gmail SMTP."""
+    # Limpieza profunda de credenciales
+    sender_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com').strip()
+    sender_password = os.environ.get('EMAIL_PASS', '').replace(' ', '').strip()
+    
+    print(f"📧 Sistema de Email: Iniciando envío desde {sender_email}")
+    print(f"📧 Longitud Password: {len(sender_password)} caracteres")
+    
+    if not sender_password:
+        print("⚠️ ADVERTENCIA: No se ha configurado EMAIL_PASS en las variables de entorno.")
+        return False
+        
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Usar SMTP_SSL en puerto 465 es a menudo más estable en Windows
+        print(f"📧 Conectando a smtp.gmail.com:465...")
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.login(sender_email, sender_password)
+        text = msg.as_string()
+        server.sendmail(sender_email, to_email, text)
+        server.quit()
+        print(f"✅ Notificación enviada exitosamente a {to_email}")
+        return True
+    except smtplib.SMTPAuthenticationError:
+        print(f"❌ Error de Autenticación (535): La contraseña de aplicación no fue aceptada.")
+        print(f"   Asegúrate de que la Verificación en 2 pasos esté ACTIVA y que la contraseña sea la de 16 letras.")
+        return False
+    except Exception as e:
+        print(f"❌ Error inesperado al enviar correo: {e}")
+        traceback.print_exc()
+        return False
 
 # --- Top-Level Helper and Processing Functions ---
 
@@ -158,7 +208,7 @@ def get_all_views_for_frame(frame, yolo_m, basket_m, pose_m, colors_util):
     
     return views
 
-def run_analysis_background(task_id, upload_path, file_type, tasks_dict):
+def run_analysis_background(task_id, upload_path, file_type, tasks_dict, user_email=None):
     """Worker function to run analysis in a background process."""
     print(f"Starting analysis for task: {task_id} (type: {file_type}) in PID {os.getpid()}")
     tasks_dict[task_id] = {'status': 'processing'}
@@ -187,7 +237,9 @@ def run_analysis_background(task_id, upload_path, file_type, tasks_dict):
                 result_path = os.path.join(RESULTS_FOLDER, result_filename)
                 cv2.imwrite(result_path, img_array)
                 result_urls[key] = f"/static/results/{result_filename}"
-            tasks_dict[task_id] = {'status': 'complete', 'result_urls': result_urls, 'result_type': file_type, 'available_views': list(all_views.keys())}
+            
+            status_data = {'status': 'complete', 'result_urls': result_urls, 'result_type': file_type, 'available_views': list(all_views.keys())}
+            tasks_dict[task_id] = status_data
 
         elif file_type == 'video':
             cap = cv2.VideoCapture(upload_path)
@@ -232,7 +284,23 @@ def run_analysis_background(task_id, upload_path, file_type, tasks_dict):
             for writer in video_writers.values():
                 writer.release()
             
-            tasks_dict[task_id] = {'status': 'complete', 'result_urls': result_urls, 'result_type': file_type, 'available_views': all_view_keys}
+            status_data = {'status': 'complete', 'result_urls': result_urls, 'result_type': file_type, 'available_views': all_view_keys}
+            tasks_dict[task_id] = status_data
+
+        # --- Send Email Notification ---
+        subject = f"🏀 AthenaBall: Análisis completado ({task_id[:8]})"
+        body = f"Hola,\n\nTu análisis de {file_type} en AthenaBall ha finalizado con éxito.\n\n"
+        body += f"ID de Tarea: {task_id}\n"
+        body += f"Archivo original: {original_filename}\n\n"
+        body += "Ya puedes ver los resultados en el dashboard.\n\n¡Gracias por usar Basketball Holístico!"
+        
+        # Send to user (if provided) and to the system admin/primary email
+        primary_email = os.environ.get('EMAIL_USER', 'mexaion018@gmail.com')
+        send_email_notification(primary_email, subject, body)
+        
+        if user_email and user_email != primary_email:
+            send_email_notification(user_email, subject, body)
+
         print(f"Finished analysis for task: {task_id}")
 
     except Exception as e:
@@ -254,19 +322,12 @@ def create_app():
     manager = multiprocessing.Manager()
     tasks = manager.dict()
 
-    @app.route('/', defaults={'path': ''})
-    @app.route('/<path:path>')
-    def index(path):
-        # Allow requests to static files, analyze API, and athenaball UI (handled by specific routes)
-        if path.startswith('static/') or path == 'analyze' or path == 'athenaball':
-            return app.send_static_file(path)
-        return render_template('index.html')
 
-    @app.route('/athenaball')
-    def athenaball_ui():
-        return render_template('athenaball.html')
+    @app.route('/')
+    def index():
+        return jsonify({"status": "running", "service": "AthenaBall API"})
 
-    @app.route('/analyze', methods=['POST'])
+    @app.route('/api/analyze', methods=['POST'])
     def analyze():
         if 'file' not in request.files: return jsonify({'error': 'No file part'}), 400
         file = request.files['file']
@@ -281,12 +342,168 @@ def create_app():
         original_file_url = f"/static/uploads/{filename}"
         tasks[task_id] = {'status': 'pending'}
 
-        process = multiprocessing.Process(target=run_analysis_background, args=(task_id, upload_path, file_type, tasks))
+        user_email = request.form.get('user_email')
+
+        process = multiprocessing.Process(target=run_analysis_background, args=(task_id, upload_path, file_type, tasks, user_email))
         process.start()
 
         return jsonify({'task_id': task_id, 'original_file_url': original_file_url, 'file_type': file_type, 'available_views': []}), 202
 
-    @app.route('/status/<task_id>')
+    USERS_DATA_FILE = os.path.join(BASE_DIR, 'users_data.json')
+
+    def load_users():
+        if os.path.exists(USERS_DATA_FILE):
+            with open(USERS_DATA_FILE, 'r', encoding='utf-8') as f:
+                try: return json.load(f)
+                except: return {}
+        return {}
+
+    def save_users(users):
+        with open(USERS_DATA_FILE, 'w', encoding='utf-8') as f:
+            json.dump(users, f, ensure_ascii=False, indent=4)
+
+    def send_unified_notifications(data, action_type="ACTUALIZACIÓN"):
+        """Sends email and WhatsApp alerts to both administrator and user."""
+        name = data.get('name', 'N/A')
+        email = data.get('email', 'N/A')
+        phone = data.get('phone', '')
+        bio = data.get('bio', 'N/A')
+        
+        emoji = "👤"
+        if "REGISTRO" in action_type.upper(): emoji = "🆕"
+        elif "SESIÓN" in action_type.upper(): emoji = "🔐"
+        
+        subject = f"{emoji} {action_type}: {name}"
+        body = f"Evento de Basketball Holístico: {action_type}\n\n"
+        body += f"Nombre: {name}\n"
+        body += f"Email: {email}\n"
+        body += f"Teléfono: {phone}\n"
+        body += f"Bio: {bio}\n\n"
+        body += "--- Metadatos del Sistema ---\n"
+        body += f"Acción: {action_type}\n"
+        body += "Origen: Dashboard Principal\n"
+        
+        # Email Notification - Administrator
+        primary_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com')
+        send_email_notification(primary_email, subject, body)
+        
+        # Email Notification - User (if different and not a login event to avoid spam)
+        if email and email != primary_email and '@' in email and "SESIÓN" not in action_type.upper():
+            send_email_notification(email, subject, body)
+            
+        # WhatsApp Notification (Ninja Method)
+        if phone:
+            # Clean phone: only digits
+            clean_phone = ''.join(filter(str.isdigit, str(phone)))
+            
+            # Format for Mexico: If 10 digits, prepend 521
+            if len(clean_phone) == 10:
+                clean_phone = '521' + clean_phone
+            
+            try:
+                import requests
+                whatsapp_url = 'http://localhost:3002/send'
+                whatsapp_msg = f"{emoji} *{action_type}*\n\n"
+                whatsapp_msg += f"👤 *Usuario:* {name}\n"
+                whatsapp_msg += f"📧 *Email:* {email}\n"
+                whatsapp_msg += f"📱 *Móvil:* {phone}\n\n"
+                whatsapp_msg += "_Notificación automática del sistema._"
+                
+                requests.post(whatsapp_url, json={'number': clean_phone, 'message': whatsapp_msg}, timeout=5)
+            except Exception as e:
+                print(f"⚠️ Error al conectar con Motor Ninja: {e}")
+
+    @app.route('/api/register', methods=['POST'])
+    def register():
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        if not email or not password:
+            return jsonify({'error': 'Email and password required'}), 400
+        
+        users = load_users()
+        if email in users:
+            return jsonify({'error': 'User already exists'}), 400
+        
+        # Build full profile from available data
+        profile = {
+            'name': data.get('name', ''),
+            'email': email,
+            'avatar': data.get('avatar', '/static/MJ.JPG'),
+            'age': data.get('age', 0),
+            'height': data.get('height', ''),
+            'weight': data.get('weight', ''),
+            'position': data.get('position', ''),
+            'team': data.get('team', ''),
+            'phone': data.get('phone', ''),
+            'bio': data.get('bio', '')
+        }
+
+        users[email] = {
+            'password': password,
+            'profile': profile
+        }
+        save_users(users)
+        
+        # Notificar registro exitoso
+        send_unified_notifications(profile, action_type="NUEVO USUARIO REGISTRADO")
+        
+        return jsonify({'status': 'success', 'user': profile}), 201
+
+    @app.route('/api/login', methods=['POST'])
+    def login():
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        users = load_users()
+        
+        user = users.get(email)
+        if not user or user['password'] != password:
+            return jsonify({'error': 'Invalid credentials'}), 401
+            
+        # Notificar inicio de sesión
+        send_unified_notifications(user['profile'], action_type="INICIO DE SESIÓN")
+        
+        return jsonify({'status': 'success', 'user': user['profile']}), 200
+
+    @app.route('/api/get_profile', methods=['GET'])
+    def get_profile():
+        email = request.args.get('email')
+        if not email: return jsonify({}), 400
+        
+        users = load_users()
+        user = users.get(email)
+        if user:
+            return jsonify(user.get('profile', {}))
+        return jsonify({})
+
+    @app.route('/api/save_profile', methods=['POST'])
+    def save_profile():
+        data = request.json
+        email = data.get('email')
+        if not email: return jsonify({'error': 'Authentication required'}), 401
+        
+        users = load_users()
+        if email in users:
+            users[email]['profile'].update(data)
+            save_users(users)
+            
+            # Notificar
+            send_unified_notifications(data, action_type="PERFIL ACTUALIZADO")
+            
+            return jsonify({'status': 'success', 'message': 'Perfil guardado'}), 200
+            
+        return jsonify({'error': 'User not found'}), 404
+
+    @app.route('/api/notify_profile', methods=['POST'])
+    def notify_profile():
+        data = request.json
+        if not data: return jsonify({'error': 'No data provided'}), 400
+        
+        send_unified_notifications(data)
+        return jsonify({'status': 'success', 'message': 'Notificaciones enviadas'}), 200
+
+    @app.route('/api/status/<task_id>')
     def task_status(task_id):
         task = tasks.get(task_id)
         if not task: return jsonify({'status': 'failed', 'error': 'Task not found'}), 404
@@ -295,12 +512,12 @@ def create_app():
     return app
 
 # Expose app for Gunicorn
-app = create_app()
+app = None
 
 if __name__ == '__main__':
     if not all([YOLO_AVAILABLE, PILLOW_AVAILABLE]):
         print("Faltan dependencias. Por favor, instala 'ultralytics' y 'Pillow'.")
     else:
         multiprocessing.freeze_support()
-        # app is already created
+        app = create_app()
         app.run(host='0.0.0.0', port=3001, debug=False)

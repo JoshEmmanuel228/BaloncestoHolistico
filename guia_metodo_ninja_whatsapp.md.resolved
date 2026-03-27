@@ -1,0 +1,234 @@
+# 🥷 El "Método Ninja" para Notificaciones Inmediatas de WhatsApp
+
+Este método conecta un formulario web en tu frontend con un servidor local de **Node.js** que utiliza WhatsApp Web en segundo plano (simulando tu teléfono) para enviarte un mensaje en milisegundos cuando alguien hace clic en "Agendar Cita" o "Llámame". 
+
+La arquitectura se divide en 3 partes esenciales:
+1. **El Motor Node.js (Backend):** Un servidor Express que mantiene la sesión de WhatsApp abierta.
+2. **El Gateway de PHP (WordPress):** Una API REST en WordPress que recibe la solicitud del usuario de forma segura y se la pasa al Motor Node.js.
+3. **El Frontend (JavaScript):** El código en la página que detecta el clic y envía los datos del cliente al Gateway.
+
+Aquí tienes el manual de cómo replicarlo en otro proyecto:
+
+---
+
+## 🚀 Fase 1: El Motor Node.js (El Bot de WhatsApp)
+
+Este pequeño servidor se encarga de abrir un navegador invisible, escanear el QR y mantener la conexión con WhatsApp para enviar mensajes sin usar APIs oficiales de pago de Meta.
+
+**1. Preparar el entorno:**
+En tu servidor o máquina, crea una carpeta para este motor y ejecuta:
+```bash
+npm init -y
+npm install whatsapp-web.js qrcode-terminal express cors body-parser
+```
+
+**2. Crear el archivo `motor-whatsapp.js`:**
+Este es el equivalente a tu actual [mtm-wp-whatsapp.js](file:///c:/Users/joshy/OneDrive%20-%20Instituto%20Politecnico%20Nacional/mtmetropolitano.com__2026-02-26T12_08_22-0600/mtm-wp-whatsapp.js):
+
+```javascript
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
+let currentQR = '';
+let isReady = false;
+
+// Configurar el cliente de WhatsApp
+const client = new Client({
+    authStrategy: new LocalAuth({ clientId: "mi-bot-ninja" }),
+    webVersionCache: { type: 'none' },
+    puppeteer: {
+        headless: true, // true para que no abra ventana de Chrome en el servidor
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security']
+    }
+});
+
+// Cuando requiere escanear QR
+client.on('qr', (qr) => {
+    console.log('NUEVO QR. ESCANEA PARA CONECTAR:');
+    qrcode.generate(qr, { small: true });
+    currentQR = qr;
+});
+
+// Cuando ya está conectado
+client.on('ready', () => {
+    console.log('¡CLIENTE WHATSAPP CONECTADO!');
+    isReady = true;
+    currentQR = '';
+});
+
+// Iniciar el cliente
+client.initialize();
+
+// Rutas Express para conectar con WordPress
+app.get('/status', (req, res) => {
+    res.json({ ready: isReady, qr: currentQR });
+});
+
+app.post('/send', async (req, res) => {
+    if (!isReady) return res.status(503).json({ error: 'WhatsApp no está listo.' });
+
+    try {
+        const { number, message } = req.body;
+        const chatId = `${number}@c.us`; // Formato requerido por la librería
+        await client.sendMessage(chatId, message);
+        console.log(`Mensaje enviado a ${number}`);
+        res.json({ success: true, message: 'Push enviado con éxito' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.toString() });
+    }
+});
+
+const PORT = 3001;
+app.listen(PORT, () => {
+    console.log(`Motor Ninja corriendo en el puerto ${PORT}`);
+});
+```
+*Para ejecutarlo, simplemente corres: `node motor-whatsapp.js` y lo dejas corriendo (puedes usar PM2 en un servidor de producción).*
+
+---
+
+## 🌉 Fase 2: El Gateway en WordPress (PHP)
+
+El Frontend no le habla directo a Node.js por seguridad. Le habla a WordPress (que valida la petición) y WordPress se comunica internamente con Node.js. 
+
+Puedes agregar esto en el archivo `functions.php` de tu tema o crear un MU Plugin (como tu actual [mtm-whatsapp-gateway.php](file:///c:/Users/joshy/OneDrive%20-%20Instituto%20Politecnico%20Nacional/mtmetropolitano.com__2026-02-26T12_08_22-0600/files/wp-content/mu-plugins/mtm-whatsapp-gateway.php)).
+
+```php
+<?php
+add_action('rest_api_init', 'ninja_register_whatsapp_endpoints');
+
+function ninja_register_whatsapp_endpoints() {
+    // Endpoint para enviar el mensaje
+    register_rest_route('ninja/v1', '/whatsapp/send', array(
+        'methods' => 'POST',
+        'callback' => 'ninja_handle_whatsapp_send',
+        'permission_callback' => '__return_true'
+    ));
+}
+
+function ninja_handle_whatsapp_send($request) {
+    $params = $request->get_json_params() ?: $request->get_body_params();
+
+    // Recoger los datos del cliente
+    $name = sanitize_text_field($params['name'] ?? 'Desconocido');
+    $phone = sanitize_text_field($params['phone'] ?? '');
+    $type = sanitize_text_field($params['type'] ?? 'cita'); // 'cita' o 'llamada'
+
+    // Formatear el mensaje a enviar
+    if ($type === 'llamada') {
+        $message = "🚨 *SOLICITUD DE LLAMADA URGENTE* 🚨\n\n";
+        $message .= "🙎‍♂️ *Cliente:* {$name}\n";
+        $message .= "📱 *Móvil:* {$phone}\n\n";
+        $message .= "_Llamar a la brevedad._";
+    } else {
+        $message = "🌟 *NUEVA CITA AGENDADA* 🌟\n\n";
+        $message .= "🙎‍♂️ *Cliente:* {$name}\n";
+        $message .= "📱 *Teléfono:* {$phone}\n\n";
+        $message .= "_Formulario Web_";
+    }
+
+    // URL de tu servidor Node.js (Si usan la misma máquina, es localhost o host.docker.internal si usas docker)
+    $node_url = 'http://localhost:3001/send'; 
+
+    $send_body = wp_json_encode(array(
+        "number" => "5215616417138", // 👈 TU NÚMERO DONDE RECIBIRÁS LOS MENSAJES
+        "message" => $message
+    ));
+
+    // WordPress hace la petición al servidor Node local
+    $response = wp_remote_post($node_url, array(
+        'headers' => array('Content-Type' => 'application/json'),
+        'body'    => $send_body,
+        'timeout' => 10
+    ));
+
+    if (is_wp_error($response)) {
+        return new WP_REST_Response(array('success' => false, 'error' => 'Error de conexión.'), 500);
+    }
+
+    return new WP_REST_Response(array('success' => true, 'message' => '¡Notificación enviada!'), 200);
+}
+?>
+```
+
+---
+
+## 💻 Fase 3: El Frontend (HTML / JavaScript)
+
+Finalmente, necesitas tener tus botones o formularios en la página HTML e interceptar el clic para mandarle la información a nuestro Endpoint de WordPress.
+
+Ejemplo en JavaScript puro:
+
+```html
+<!-- Formulario o Botones en tu web -->
+<input type="text" id="clienteNombre" placeholder="Tu Nombre">
+<input type="tel" id="clienteTelefono" placeholder="Tu Teléfono">
+
+<button id="btnLlamame">Llámame ahora</button>
+<button id="btnAgendar">Agendar Cita</button>
+
+<script>
+    // Función central que dispara el "Método Ninja"
+    async function dispararMetodoNinja(tipoNotificacion) {
+        const name = document.getElementById('clienteNombre').value;
+        const phone = document.getElementById('clienteTelefono').value;
+
+        if(!name || !phone) {
+            alert('Por favor ingresa tu nombre y teléfono.');
+            return;
+        }
+
+        try {
+            // Hacemos el ping a nuestro Gateway en WordPress
+            const response = await fetch('/wp-json/ninja/v1/whatsapp/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    phone: phone,
+                    type: tipoNotificacion // 'llamada' o 'cita'
+                })
+            });
+
+            const data = await response.json();
+
+            if(data.success) {
+                alert('¡Listo! Nos pondremos en contacto contigo de inmediato.');
+            } else {
+                alert('Hubo un error al procesar tu solicitud.');
+            }
+
+        } catch (error) {
+            console.error('Fallo en el servidor Ninja:', error);
+        }
+    }
+
+    // Asignar los eventos a los botones
+    document.getElementById('btnLlamame').addEventListener('click', () => {
+        dispararMetodoNinja('llamada');
+        // Aquí podrías abrir un modal, mostrar animación de carga, etc.
+    });
+
+    document.getElementById('btnAgendar').addEventListener('click', () => {
+        dispararMetodoNinja('cita');
+    });
+</script>
+```
+
+---
+
+## 🎯 PUESTA EN MARCHA (El Ritual Ninja)
+
+Para que todo funcione en el nuevo proyecto, los pasos de arranque son siempre:
+1. Asegurarte de que **Node.js** está instalado en el servidor.
+2. Correr el comando `node motor-whatsapp.js` en la consola. 
+3. Echar un vistazo a la consola: te imprimirá un **Código QR**.
+4. Abrir WhatsApp en tu celular (el número "emisor"), ir a Dispositivos Vinculados y escanear el QR en la consola.
+5. ¡Listo! Node guardará la sesión de forma local. A partir de ahora los botones "Agendar Cita" y "Llámame" enviarán el instante la notificación VIP por WhatsApp.

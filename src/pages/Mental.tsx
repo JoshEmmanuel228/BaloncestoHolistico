@@ -1,5 +1,6 @@
 import React from 'react';
 import '../styles/sectionBackgrounds.css';
+import '../styles/profileBio.css';
 
 import {
   Box,
@@ -14,6 +15,7 @@ import {
   ListItemText,
   Tabs,
   Tab,
+  Container,
 } from '@mui/material';
 import { useNavigate } from "react-router-dom";
 import {
@@ -120,78 +122,136 @@ const Mental = () => {
   ];
 
   return (
-    <>
-      {/* Fondo KB.JPG para la sección de preparación mental */}
-      <div className="mental-bg-kb"></div>
-      <Box sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-        <Typography variant="h4" gutterBottom>
-          Preparación Mental
-        </Typography>
-        <Tabs value={value} onChange={handleChange} aria-label="mental tabs">
-          <Tab label="Ejercicios" />
-          <Tab label="Videos" />
-          <Tab label="Podcast" />
-        </Tabs>
+    <div className="bio-interface-container" style={{ minHeight: '100vh', width: '100%' }}>
+      {/* Animated DNA Background Layer */}
+      <div className="dna-bg-layer"></div>
 
-        <TabPanel value={value} index={0}>
-          <Grid container spacing={3}>
-            {mentalModules.map((module) => (
-              <Grid item xs={12} md={4} key={module.id}>
-                <Card>
-                  <CardContent>
-                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                      {module.icon}
-                      <Typography variant="h6" sx={{ ml: 1 }}>
-                        {module.title}
+      <Box sx={{ p: 0, position: 'relative', zIndex: 1, minHeight: '100vh' }}>
+        <Box sx={{
+          width: '100%',
+          borderBottom: '1px solid rgba(0,234,255,0.2)',
+          bgcolor: 'rgba(5, 15, 25, 0.4)',
+          backdropFilter: 'blur(10px)',
+          pt: 10,
+          pb: 2,
+          mb: 4
+        }}>
+          <Container maxWidth="xl">
+            <Typography variant="h4" gutterBottom sx={{ 
+              fontFamily: "'Orbitron', sans-serif", 
+              fontWeight: 700,
+              color: '#00eaff',
+              textShadow: '0 0 10px rgba(0,234,255,0.4)',
+              letterSpacing: 2
+            }}>
+              PREPARACIÓN MENTAL // NEURAL_INTERFACE
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(0,234,255,0.6)', letterSpacing: 1 }}>
+              PSYCHOLOGICAL TRAINING MODULE // V.1.0
+            </Typography>
+          </Container>
+        </Box>
+
+        <Container maxWidth="xl">
+          <Tabs 
+            value={value} 
+            onChange={handleChange} 
+            aria-label="mental tabs"
+            sx={{
+              '& .MuiTabs-indicator': { backgroundColor: '#00eaff' },
+              '& .MuiTab-root': { color: 'rgba(0,234,255,0.5)', fontFamily: "'Orbitron', sans-serif" },
+              '& .Mui-selected': { color: '#00eaff !important' },
+              mb: 4
+            }}
+          >
+            <Tab label="Ejercicios" />
+            <Tab label="Videos" />
+            <Tab label="Podcast" />
+          </Tabs>
+
+          <TabPanel value={value} index={0}>
+            <Grid container spacing={3}>
+              {mentalModules.map((module) => (
+                <Grid item xs={12} md={4} key={module.id}>
+                  <Card sx={{ 
+                    bgcolor: 'rgba(5, 15, 25, 0.8)', 
+                    border: '1px solid rgba(0,234,255,0.2)',
+                    backdropFilter: 'blur(10px)',
+                    height: '100%',
+                    transition: 'all 0.3s ease',
+                    '&:hover': { 
+                      borderColor: '#00eaff',
+                      boxShadow: '0 0 20px rgba(0,234,255,0.2)',
+                      transform: 'translateY(-5px)'
+                    }
+                  }}>
+                    <CardContent>
+                      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                        {React.cloneElement(module.icon as React.ReactElement, { sx: { fontSize: 40, color: '#00eaff' } })}
+                        <Typography variant="h6" sx={{ ml: 1, color: '#00eaff', fontFamily: "'Orbitron', sans-serif" }}>
+                          {module.title}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" sx={{ color: 'rgba(0, 234, 255, 0.7)', mb: 2, height: '3em', overflow: 'hidden' }}>
+                        {module.description}
                       </Typography>
-                    </Box>
-                    <Typography color="text.secondary" paragraph>
-                      {module.description}
-                    </Typography>
-                    <List>
-                      {module.exercises.map((exercise, idx) => (
-                        <ListItem key={idx}>
-                          <ListItemIcon>
-                            <PsychologyIcon />
-                          </ListItemIcon>
-                          <ListItemText primary={exercise} />
-                        </ListItem>
-                      ))}
-                    </List>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      sx={{ mt: 2 }}
-                      onClick={() => navigate(`/mental/${module.id}`)}
-                    >
-                      Ver Ejercicios Completos
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </TabPanel>
+                      <List dense sx={{ mb: 2 }}>
+                        {module.exercises.map((exercise, idx) => (
+                          <ListItem key={idx} sx={{ px: 0 }}>
+                            <ListItemIcon sx={{ minWidth: 35, color: '#00eaff' }}>
+                              <PsychologyIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText 
+                              primary={exercise} 
+                              primaryTypographyProps={{ variant: 'body2', sx: { color: 'rgba(255,255,255,0.8)' } }} 
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                      <Button
+                        variant="outlined"
+                        className="bio-btn"
+                        fullWidth
+                        sx={{ mt: 'auto' }}
+                        onClick={() => navigate(`/mental/${module.id}`)}
+                      >
+                        ACCEDER AL MÓDULO
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </TabPanel>
 
-        <TabPanel value={value} index={1}>
-          <Typography variant="h5" gutterBottom>
-            Videos de Preparación Mental
-          </Typography>
-          {mentalVideos.local.map((video, index) => (
-            <LocalVideo key={`local-video-${index}`} {...video} />
-          ))}
-        </TabPanel>
+          <TabPanel value={value} index={1}>
+            <Typography variant="h5" gutterBottom sx={{ color: '#00eaff', fontFamily: "'Orbitron', sans-serif", mb: 3 }}>
+              ARCHIVOS DE VIDEO // REPRODUCCIÓN
+            </Typography>
+            <Grid container spacing={4}>
+              {mentalVideos.local.map((video, index) => (
+                <Grid item xs={12} key={`local-video-${index}`}>
+                   <LocalVideo {...video} />
+                </Grid>
+              ))}
+            </Grid>
+          </TabPanel>
 
-        <TabPanel value={value} index={2}>
-          <Typography variant="h5" gutterBottom>
-            Podcast Baloncestista
-          </Typography>
-          {mentalPodcasts.local.map((podcast, index) => (
-            <LocalVideo key={`local-${index}`} {...podcast} />
-          ))}
-        </TabPanel>
+          <TabPanel value={value} index={2}>
+            <Typography variant="h5" gutterBottom sx={{ color: '#00eaff', fontFamily: "'Orbitron', sans-serif", mb: 3 }}>
+              PODCAST BALONCESTISTA // ARCHIVOS DE AUDIO
+            </Typography>
+            <Grid container spacing={4}>
+              {mentalPodcasts.local.map((podcast, index) => (
+                <Grid item xs={12} key={`local-${index}`}>
+                   <LocalVideo {...podcast} />
+                </Grid>
+              ))}
+            </Grid>
+          </TabPanel>
+        </Container>
       </Box>
-    </>
+    </div>
   );
 };
 
