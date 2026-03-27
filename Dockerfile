@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     procps \
     ca-certificates \
     libnss3 \
+    libatk1.0-0 \
     libatk-bridge2.0-0 \
     libcups2 \
     libdrm2 \
@@ -22,8 +23,6 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender1 \
     libglib2.0-0 \
-    libnss3 \
-    libgconf-2-4 \
     libfontconfig1 \
     chromium \
     --no-install-recommends && \
