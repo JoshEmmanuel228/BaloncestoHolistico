@@ -6,7 +6,7 @@ import threading
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from dotenv import load_dotenv
 
 # --- Load Environment Variables ---
@@ -317,8 +317,10 @@ def run_analysis_background(task_id, upload_path, file_type, tasks, user_email=N
 
 
 # --- App Factory ---
+DIST_DIR = os.path.join(os.path.dirname(BASE_DIR), 'dist')
+
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder=DIST_DIR, static_url_path='')
     
     from flask_cors import CORS
     CORS(app)
@@ -330,9 +332,10 @@ def create_app():
     tasks = {}
     tasks_lock = threading.Lock()
 
+    # --- Servir Frontend (SPA) ---
     @app.route('/')
-    def index():
-        return jsonify({"status": "running", "service": "AthenaBall API"})
+    def serve_frontend():
+        return send_from_directory(DIST_DIR, 'index.html')
 
     @app.route('/api/')
     def api_index():
@@ -522,6 +525,15 @@ def create_app():
         task = tasks.get(task_id)
         if not task: return jsonify({'status': 'failed', 'error': 'Task not found'}), 404
         return jsonify(task)
+    
+    # --- Catch-all: React Router SPA ---
+    @app.errorhandler(404)
+    def not_found(e):
+        # Si es una petición a /api/, devolver 404 JSON
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Not found'}), 404
+        # Para todo lo demás, servir el SPA (React Router maneja las rutas)
+        return send_from_directory(DIST_DIR, 'index.html')
     
     return app
 

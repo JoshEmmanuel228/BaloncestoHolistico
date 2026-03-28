@@ -5,23 +5,22 @@
 # Node modules (se instalan en el build)
 node_modules/
 
-# Frontend build output (no necesario en backend)
-dist/
-src/
-public/
-*.tsx
-*.ts
-tsconfig*.json
-vite.config.ts
-index.html
-
 # Archivos multimedia pesados (no necesarios en producción)
 *.mp4
 *.m4a
-*.png
-*.jpg
-*.JPG
-*.jpeg
+El_*.m4a
+El_*.mp4
+Más_*.mp4
+Fuerza_*.m4a
+
+# Imágenes grandes del root (no necesarias en el container)
+1x1_una_cancha_de_baloncesto_alucina.png
+BalonBackground.png
+Balonycancha.png
+Court.png
+equipo.png
+fondoasistentedeportivo.jpg
+nutricion.png
 
 # Python cache
 __pycache__/
@@ -36,7 +35,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Modelos YOLO estándar (se descargarán si se necesitan)
+# Modelos YOLO estándar (se descargan bajo demanda)
 yolov8x-seg.pt
 yolov8x-pose.pt
 
@@ -46,3 +45,6 @@ README.md
 
 # Env
 .env
+
+# Build output (se genera durante Docker build)
+dist/
