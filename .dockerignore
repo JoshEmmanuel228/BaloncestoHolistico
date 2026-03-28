@@ -18,9 +18,21 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Modelos YOLO estándar (se descargan bajo demanda)
+# Modelos YOLO estándar (se descargan bajo demanda via ultralytics)
 yolov8x-seg.pt
 yolov8x-pose.pt
+yolov8n-seg.pt
+yolov8n-pose.pt
+
+# Archivos multimedia grandes (no necesarios en producción)
+*.mp4
+*.m4a
+*.JPG
+*.png
+!AthenaBall_WebApp/static/**
+
+# WhatsApp auth local (se usa el disco persistente en Render)
+AthenaBall_WebApp/.wwebjs_auth/
 
 # Docs
 README.md

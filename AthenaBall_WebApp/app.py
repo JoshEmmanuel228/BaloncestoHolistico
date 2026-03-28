@@ -1,5 +1,7 @@
 import os
+import gc
 import json
+import time
 import traceback
 import uuid
 import threading
@@ -21,16 +23,24 @@ _colors_util = None
 _models_lock = threading.Lock()
 _models_loaded = False
 
+# --- Memory Tracking ---
+def get_memory_mb():
+    """Retorna el uso de memoria del proceso en MB."""
+    try:
+        import psutil
+        process = psutil.Process(os.getpid())
+        return process.memory_info().rss / 1024 / 1024
+    except Exception:
+        return -1
 
 def _lazy_load_models():
-    """Carga los modelos YOLO solo cuando se necesitan (primera llamada a /api/analyze)."""
+    """Carga los modelos YOLO NANO solo cuando se necesitan."""
     global _yolo_model, _basket_model, _pose_model, _colors_util, _models_loaded
     
     if _models_loaded:
         return _yolo_model, _basket_model, _pose_model, _colors_util
     
     with _models_lock:
-        # Double-check después de obtener el lock
         if _models_loaded:
             return _yolo_model, _basket_model, _pose_model, _colors_util
         
@@ -38,22 +48,29 @@ def _lazy_load_models():
             from ultralytics import YOLO
             from ultralytics.utils.plotting import Colors
             
-            print(f"📦 Cargando modelos YOLO (lazy-load)... PID={os.getpid()}")
+            mem_before = get_memory_mb()
+            print(f"📦 Cargando modelos YOLO NANO (bajo demanda)... RAM={mem_before:.0f}MB")
             
             basket_model_path = os.path.join(BASE_DIR, 'TRAin2.pt')
             
-            print("  → Cargando YOLOv8x-seg...")
-            _yolo_model = YOLO('yolov8x-seg.pt')
+            # ============================================================
+            # MODELOS NANO: ~6MB cada uno en vez de ~140MB (yolov8x)
+            # Ahorro estimado: ~270MB de RAM
+            # ============================================================
+            print("  → Cargando yolov8n-seg (NANO ~6MB)...")
+            _yolo_model = YOLO('yolov8n-seg.pt')
             
             print(f"  → Cargando modelo custom desde {basket_model_path}...")
             _basket_model = YOLO(basket_model_path)
             
-            print("  → Cargando YOLOv8x-pose...")
-            _pose_model = YOLO('yolov8x-pose.pt')
+            print("  → Cargando yolov8n-pose (NANO ~6MB)...")
+            _pose_model = YOLO('yolov8n-pose.pt')
             
             _colors_util = Colors()
             _models_loaded = True
-            print(f"✅ Modelos cargados correctamente en PID={os.getpid()}")
+            
+            mem_after = get_memory_mb()
+            print(f"✅ Modelos NANO cargados | RAM: {mem_before:.0f}MB → {mem_after:.0f}MB (+{mem_after - mem_before:.0f}MB)")
             
             return _yolo_model, _basket_model, _pose_model, _colors_util
         except Exception as e:
@@ -62,30 +79,96 @@ def _lazy_load_models():
             return None, None, None, None
 
 
+def _unload_models():
+    """Libera los modelos YOLO de memoria para mantener el footprint bajo."""
+    global _yolo_model, _basket_model, _pose_model, _colors_util, _models_loaded
+    
+    with _models_lock:
+        mem_before = get_memory_mb()
+        
+        _yolo_model = None
+        _basket_model = None
+        _pose_model = None
+        _colors_util = None
+        _models_loaded = False
+        
+        # Forzar garbage collection
+        gc.collect()
+        
+        # Si torch está disponible, limpiar su caché también
+        try:
+            import torch
+            if hasattr(torch, 'cuda'):
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
+        
+        gc.collect()
+        
+        mem_after = get_memory_mb()
+        print(f"🧹 Modelos descargados de RAM | {mem_before:.0f}MB → {mem_after:.0f}MB (liberados ~{mem_before - mem_after:.0f}MB)")
+
+
 # --- Email Notification Logic ---
-def send_email_notification(to_email, subject, body):
-    """Sends a lightweight plain-text email notification."""
+def send_email_notification(to_email, subject, body, retries=2):
+    """Envía email con reintentos automáticos."""
     sender_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com').strip()
     sender_password = os.environ.get('EMAIL_PASS', '').replace(' ', '').strip()
     
     if not sender_password:
+        print(f"⚠️ EMAIL_PASS no configurado, no se puede enviar email a {to_email}")
         return False
-        
-    try:
-        msg = MIMEMultipart()
-        msg['From'] = sender_email
-        msg['To'] = to_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
-        
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, to_email, msg.as_string())
-        server.quit()
-        return True
-    except Exception as e:
-        print(f"❌ Error Email: {e}")
+    
+    for attempt in range(retries + 1):
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = to_email
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body, 'plain'))
+            
+            server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10)
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, to_email, msg.as_string())
+            server.quit()
+            print(f"✅ Email enviado a {to_email}")
+            return True
+        except Exception as e:
+            print(f"❌ Error Email (intento {attempt + 1}/{retries + 1}): {e}")
+            if attempt < retries:
+                time.sleep(2 ** attempt)  # Backoff: 1s, 2s
+    
+    return False
+
+
+def send_whatsapp_notification(phone, message, retries=2):
+    """Envía WhatsApp con reintentos y fallback robusto."""
+    clean_phone = ''.join(filter(str.isdigit, str(phone)))
+    if len(clean_phone) == 10:
+        clean_phone = '521' + clean_phone
+    
+    if not clean_phone or len(clean_phone) < 10:
         return False
+    
+    for attempt in range(retries + 1):
+        try:
+            import requests
+            resp = requests.post('http://localhost:3002/send', json={
+                'number': clean_phone,
+                'message': message
+            }, timeout=8)
+            
+            if resp.status_code == 200:
+                print(f"✅ WhatsApp enviado a {clean_phone}")
+                return True
+            else:
+                print(f"⚠️ WhatsApp respuesta {resp.status_code}: {resp.text}")
+        except Exception as e:
+            print(f"❌ WhatsApp (intento {attempt + 1}/{retries + 1}): {e}")
+            if attempt < retries:
+                time.sleep(2 ** attempt)
+    
+    return False
 
 
 # --- Image Processing Functions (imports diferidos) ---
@@ -200,11 +283,16 @@ def get_all_views_for_frame(frame, yolo_m, basket_m, pose_m, colors_util):
 
 
 def run_analysis_background(task_id, upload_path, file_type, tasks, user_email=None):
-    """Worker function para análisis en un thread de fondo (no proceso separado)."""
+    """Worker function para análisis en un thread de fondo.
+    
+    IMPORTANTE: Después del análisis, DESCARGA los modelos de RAM para
+    mantener el footprint bajo y evitar que Render mate el proceso.
+    """
     import cv2
     import numpy as np
     
-    print(f"🔬 Iniciando análisis para tarea: {task_id} (tipo: {file_type})")
+    mem_start = get_memory_mb()
+    print(f"🔬 Iniciando análisis para tarea: {task_id} (tipo: {file_type}) | RAM: {mem_start:.0f}MB")
     tasks[task_id] = {'status': 'processing'}
     
     try:
@@ -231,11 +319,15 @@ def run_analysis_background(task_id, upload_path, file_type, tasks, user_email=N
                 cv2.imwrite(result_path, img_array)
                 result_urls[key] = f"/static/results/{result_filename}"
             
+            # Liberar frame y vistas de memoria
+            del frame, all_views
+            gc.collect()
+            
             tasks[task_id] = {
                 'status': 'complete',
                 'result_urls': result_urls,
                 'result_type': file_type,
-                'available_views': list(all_views.keys())
+                'available_views': list(result_urls.keys())
             }
 
         elif file_type == 'video':
@@ -272,10 +364,15 @@ def run_analysis_background(task_id, upload_path, file_type, tasks, user_email=N
                         if view_frame.shape[0] != height or view_frame.shape[1] != width:
                             view_frame = cv2.resize(view_frame, (width, height))
                         video_writers[key].write(view_frame)
+                
+                # Liberar cada frame procesado
+                del processed_views
             
             cap.release()
             for writer in video_writers.values():
                 writer.release()
+            del video_writers
+            gc.collect()
             
             tasks[task_id] = {
                 'status': 'complete',
@@ -284,7 +381,13 @@ def run_analysis_background(task_id, upload_path, file_type, tasks, user_email=N
                 'available_views': all_view_keys
             }
 
-        # --- Notificación por Email ---
+        # ============================================================
+        # CRÍTICO: Descargar modelos de RAM después del análisis
+        # Esto libera ~150-200MB y evita que Render mate el proceso
+        # ============================================================
+        _unload_models()
+
+        # --- Notificaciones con fallback ---
         subject = f"🏀 AthenaBall: Análisis completado ({task_id[:8]})"
         body = f"Hola,\n\nTu análisis de {file_type} en AthenaBall ha finalizado con éxito.\n\n"
         body += f"ID de Tarea: {task_id}\n"
@@ -297,12 +400,19 @@ def run_analysis_background(task_id, upload_path, file_type, tasks, user_email=N
         if user_email and user_email != primary_email:
             send_email_notification(user_email, subject, body)
 
-        print(f"✅ Análisis completado para tarea: {task_id}")
+        mem_end = get_memory_mb()
+        print(f"✅ Análisis completado para tarea: {task_id} | RAM final: {mem_end:.0f}MB")
 
     except Exception as e:
         print(f"❌ Error en tarea {task_id}: {e}")
         traceback.print_exc()
         tasks[task_id] = {'status': 'failed', 'error': str(e)}
+        
+        # Incluso si falla, descargar modelos para liberar RAM
+        try:
+            _unload_models()
+        except Exception:
+            pass
 
 
 # --- App Factory ---
@@ -330,8 +440,30 @@ def create_app():
     def api_index():
         return jsonify({"status": "running", "service": "AthenaBall API"})
 
+    @app.route('/api/memory', methods=['GET'])
+    def memory_status():
+        """Endpoint de monitoreo de memoria para debugging."""
+        mem = get_memory_mb()
+        return jsonify({
+            "memory_mb": round(mem, 1),
+            "models_loaded": _models_loaded,
+            "limit_mb": 512,
+            "usage_pct": round(mem / 512 * 100, 1)
+        })
+
     @app.route('/api/analyze', methods=['POST'])
     def analyze():
+        # Verificar memoria antes de aceptar análisis
+        current_mem = get_memory_mb()
+        if current_mem > 400:
+            gc.collect()
+            current_mem = get_memory_mb()
+            if current_mem > 400:
+                return jsonify({
+                    'error': 'Servidor con memoria alta. Intenta de nuevo en unos minutos.',
+                    'memory_mb': round(current_mem, 1)
+                }), 503
+
         if 'file' not in request.files: return jsonify({'error': 'No file part'}), 400
         file = request.files['file']
         if file.filename == '': return jsonify({'error': 'No selected file'}), 400
@@ -349,7 +481,6 @@ def create_app():
 
         user_email = request.form.get('user_email')
 
-        # Usar thread en vez de proceso separado (mucho menos RAM)
         thread = threading.Thread(
             target=run_analysis_background,
             args=(task_id, upload_path, file_type, tasks, user_email),
@@ -379,7 +510,11 @@ def create_app():
             json.dump(users, f, ensure_ascii=False, indent=4)
 
     def send_unified_notifications(data, action_type="ACTUALIZACIÓN"):
-        """Envía alertas ultraligeras (solo texto) por email y WhatsApp."""
+        """Envía alertas por WhatsApp y email con fallback robusto.
+        
+        Prioridad: WhatsApp primero → si falla, email como respaldo.
+        Email al admin SIEMPRE se envía como respaldo garantizado.
+        """
         name = data.get('name', 'N/A')
         email = data.get('email', 'N/A')
         phone = data.get('phone', '')
@@ -390,6 +525,7 @@ def create_app():
         elif "SESIÓN" in action_type.upper(): emoji = "🔐"
         elif "CIERRE" in action_type.upper(): emoji = "🛑"
         
+        # --- Email (siempre se intenta como canal más confiable) ---
         subject = f"{emoji} {action_type}: {name}"
         body = f"Evento de Basketball Holístico: {action_type}\n\n"
         body += f"Nombre: {name}\n"
@@ -399,32 +535,31 @@ def create_app():
         body += f"Acción: {action_type}\n"
         
         primary_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com')
-        # Admin (Joshua)
-        send_email_notification(primary_email, subject, body)
         
-        # Usuario (si no es admin)
+        # Admin SIEMPRE recibe email
+        email_sent = send_email_notification(primary_email, subject, body)
+        
+        # Usuario (si no es admin y no es login/logout)
         if email and email != primary_email and '@' in email and "SESIÓN" not in action_type.upper() and "CIERRE" not in action_type.upper():
             send_email_notification(email, subject, body)
-            
+        
+        # --- WhatsApp (se intenta, con fallback a email si falla) ---
+        whatsapp_sent = False
         if phone:
-            clean_phone = ''.join(filter(str.isdigit, str(phone)))
-            if len(clean_phone) == 10: clean_phone = '521' + clean_phone
+            whatsapp_msg = f"{emoji} *{action_type}*\n\n"
+            whatsapp_msg += f"👤 *Usuario:* {name}\n"
+            whatsapp_msg += f"📧 *Email:* {email}\n"
+            whatsapp_msg += f"📱 *Móvil:* {phone}\n\n"
+            whatsapp_msg += "_Notificación automática del sistema._"
             
-            try:
-                import requests
-                whatsapp_msg = f"{emoji} *{action_type}*\n\n"
-                whatsapp_msg += f"👤 *Usuario:* {name}\n"
-                whatsapp_msg += f"📧 *Email:* {email}\n"
-                whatsapp_msg += f"📱 *Móvil:* {phone}\n\n"
-                whatsapp_msg += "_Notificación automática del sistema._"
-                
-                # Envío solo texto (ligero)
-                requests.post('http://localhost:3002/send', json={
-                    'number': clean_phone, 
-                    'message': whatsapp_msg
-                }, timeout=5)
-            except Exception as e:
-                print(f"❌ Error WhatsApp: {e}")
+            whatsapp_sent = send_whatsapp_notification(phone, whatsapp_msg)
+            
+            if not whatsapp_sent and not email_sent:
+                # Último intento: email al admin si todo falló
+                print(f"⚠️ ALERTA: Ni WhatsApp ni Email funcionaron para {name}")
+                send_email_notification(primary_email, f"⚠️ FALLBACK: {subject}", body)
+        
+        print(f"📊 Notificación '{action_type}': Email={'✅' if email_sent else '❌'} WhatsApp={'✅' if whatsapp_sent else '❌'}")
 
     @app.route('/api/register', methods=['POST'])
     def register():
@@ -538,10 +673,8 @@ def create_app():
     # --- Catch-all: React Router SPA ---
     @app.errorhandler(404)
     def not_found(e):
-        # Si es una petición a /api/, devolver 404 JSON
         if request.path.startswith('/api/'):
             return jsonify({'error': 'Not found'}), 404
-        # Para todo lo demás, servir el SPA (React Router maneja las rutas)
         return send_from_directory(DIST_DIR, 'index.html')
     
     return app
