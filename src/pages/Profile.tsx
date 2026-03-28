@@ -1,13 +1,11 @@
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import { Box, Typography, TextField, Button, Grid, Container, Paper, Alert } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Save as SaveIcon, 
   Fingerprint as FingerprintIcon, 
   Logout as LogoutIcon,
-  Refresh as SwitchIcon,
-  PersonAdd as RegisterIcon,
-  Login as LoginIcon
+  Refresh as SwitchIcon
 } from '@mui/icons-material';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
