@@ -21,8 +21,8 @@ export default defineConfig(({ mode }) => {
       mode === 'development' && staticRewritePlugin(),
     ],
     assetsInclude: ['**/*.JPG'],
-    // In production (Render), we serve from /static/. In dev, we serve from root.
-    base: mode === 'production' ? '/static/' : '/',
+    // Render Static Site sirve desde raíz. /static/ era para servir desde Flask.
+    base: '/',
     server: {
       port: 3000,
     },
