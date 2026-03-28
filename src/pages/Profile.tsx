@@ -129,7 +129,19 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Notificar al backend sobre el cierre de sesión antes de limpiar el estado
+      if (user) {
+        await fetch(`${API_BASE_URL}/api/logout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(user),
+        });
+      }
+    } catch (error) {
+      console.error('Error al notificar cierre de sesión:', error);
+    }
     dispatch(logout());
   };
 

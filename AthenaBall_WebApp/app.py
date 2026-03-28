@@ -63,39 +63,45 @@ def _lazy_load_models():
 
 
 # --- Email Notification Logic ---
-def send_email_notification(to_email, subject, body):
-    """Sends an email notification using Gmail SMTP."""
+def send_email_notification(to_email, subject, body, image_data=None):
+    """Sends an email notification with optional image attachment."""
     sender_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com').strip()
     sender_password = os.environ.get('EMAIL_PASS', '').replace(' ', '').strip()
     
-    print(f"📧 Sistema de Email: Iniciando envío desde {sender_email}")
-    
     if not sender_password:
-        print("⚠️ ADVERTENCIA: No se ha configurado EMAIL_PASS en las variables de entorno.")
         return False
         
     try:
+        from email.mime.image import MIMEImage
         msg = MIMEMultipart()
         msg['From'] = sender_email
         msg['To'] = to_email
         msg['Subject'] = subject
         
-        msg.attach(MIMEText(body, 'plain'))
+        # HTML body to support embedded images
+        html_body = f"<html><body><p>{body.replace('\n', '<br>')}</p>"
+        if image_data:
+            html_body += '<br><p><b>Imagen de Perfil:</b></p><img src="cid:avatar_img" style="max-width:300px;">'
+        html_body += "</body></html>"
         
-        print(f"📧 Conectando a smtp.gmail.com:465...")
+        msg.attach(MIMEText(html_body, 'html'))
+        
+        if image_data:
+            # Procesar base64
+            header, encoded = (image_data.split(",", 1) if "," in image_data else (None, image_data))
+            import base64
+            img_bytes = base64.b64decode(encoded)
+            img = MIMEImage(img_bytes)
+            img.add_header('Content-ID', '<avatar_img>')
+            msg.attach(img)
+        
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.login(sender_email, sender_password)
-        text = msg.as_string()
-        server.sendmail(sender_email, to_email, text)
+        server.sendmail(sender_email, to_email, msg.as_string())
         server.quit()
-        print(f"✅ Notificación enviada exitosamente a {to_email}")
         return True
-    except smtplib.SMTPAuthenticationError:
-        print(f"❌ Error de Autenticación (535): La contraseña de aplicación no fue aceptada.")
-        return False
     except Exception as e:
-        print(f"❌ Error inesperado al enviar correo: {e}")
-        traceback.print_exc()
+        print(f"❌ Error Email: {e}")
         return False
 
 
@@ -395,10 +401,12 @@ def create_app():
         email = data.get('email', 'N/A')
         phone = data.get('phone', '')
         bio = data.get('bio', 'N/A')
+        avatar = data.get('avatar') # Base64 si viene del perfil
         
         emoji = "👤"
         if "REGISTRO" in action_type.upper(): emoji = "🆕"
         elif "SESIÓN" in action_type.upper(): emoji = "🔐"
+        elif "CIERRE" in action_type.upper(): emoji = "🛑"
         
         subject = f"{emoji} {action_type}: {name}"
         body = f"Evento de Basketball Holístico: {action_type}\n\n"
@@ -406,33 +414,43 @@ def create_app():
         body += f"Email: {email}\n"
         body += f"Teléfono: {phone}\n"
         body += f"Bio: {bio}\n\n"
-        body += "--- Metadatos del Sistema ---\n"
         body += f"Acción: {action_type}\n"
-        body += "Origen: Dashboard Principal\n"
         
         primary_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com')
-        send_email_notification(primary_email, subject, body)
+        # Enviar al admin (Joshua)
+        send_email_notification(primary_email, subject, body, image_data=avatar)
         
-        if email and email != primary_email and '@' in email and "SESIÓN" not in action_type.upper():
-            send_email_notification(email, subject, body)
+        # Enviar al usuario si no es el admin y no es solo login/logout
+        if email and email != primary_email and '@' in email and "SESIÓN" not in action_type.upper() and "CIERRE" not in action_type.upper():
+            send_email_notification(email, subject, body, image_data=avatar)
             
         if phone:
             clean_phone = ''.join(filter(str.isdigit, str(phone)))
-            if len(clean_phone) == 10:
-                clean_phone = '521' + clean_phone
+            if len(clean_phone) == 10: clean_phone = '521' + clean_phone
             
             try:
                 import requests
-                whatsapp_url = 'http://localhost:3002/send'
                 whatsapp_msg = f"{emoji} *{action_type}*\n\n"
                 whatsapp_msg += f"👤 *Usuario:* {name}\n"
                 whatsapp_msg += f"📧 *Email:* {email}\n"
                 whatsapp_msg += f"📱 *Móvil:* {phone}\n\n"
                 whatsapp_msg += "_Notificación automática del sistema._"
                 
-                requests.post(whatsapp_url, json={'number': clean_phone, 'message': whatsapp_msg}, timeout=5)
+                if avatar and "base64" in str(avatar):
+                    # Enviar con imagen
+                    requests.post('http://localhost:3002/send-media', json={
+                        'number': clean_phone, 
+                        'caption': whatsapp_msg,
+                        'imageData': avatar
+                    }, timeout=10)
+                else:
+                    # Enviar solo texto
+                    requests.post('http://localhost:3002/send', json={
+                        'number': clean_phone, 
+                        'message': whatsapp_msg
+                    }, timeout=5)
             except Exception as e:
-                print(f"⚠️ Error al conectar con Motor Ninja: {e}")
+                print(f"⚠️ Error Motor Ninja: {e}")
 
     @app.route('/api/register', methods=['POST'])
     def register():
@@ -483,6 +501,13 @@ def create_app():
         send_unified_notifications(user['profile'], action_type="INICIO DE SESIÓN")
         
         return jsonify({'status': 'success', 'user': user['profile']}), 200
+
+    @app.route('/api/logout', methods=['POST'])
+    def logout_notify():
+        data = request.json
+        if data:
+            send_unified_notifications(data, action_type="CIERRE DE SESIÓN")
+        return jsonify({'status': 'success'}), 200
 
     @app.route('/api/get_profile', methods=['GET'])
     def get_profile():
