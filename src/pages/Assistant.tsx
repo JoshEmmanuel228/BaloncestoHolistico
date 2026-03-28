@@ -15,7 +15,7 @@ const Assistant = () => {
           minWidth: '100vw',
           minHeight: '100vh',
           zIndex: 0,
-          backgroundImage: "url('/static/BalonBackground.png')",
+          backgroundImage: "url('/BalonBackground.png')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

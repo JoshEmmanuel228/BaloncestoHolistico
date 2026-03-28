@@ -12,7 +12,7 @@ import { RootState } from '../store';
 import { setUser, logout } from '../store/slices/userSlice';
 import '../styles/profileBio.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 import BioScanner from '../components/BioScanner';
 import StatHex from '../components/StatHex';
 
@@ -38,7 +38,7 @@ const Profile = () => {
     email: '',
     phone: '',
     bio: '',
-    avatar: '/static/MJ.JPG',
+    avatar: '/MJ.JPG',
   });
 
   // Load profile data when authenticated user changes
@@ -69,7 +69,7 @@ const Profile = () => {
       // Clear data when logged out
       setUserData({
         name: '', age: 0, height: '', weight: '', position: '', team: '',
-        email: '', phone: '', bio: '', avatar: '/static/MJ.JPG',
+        email: '', phone: '', bio: '', avatar: '/MJ.JPG',
       });
     }
   }, [isAuthenticated, user]);
@@ -116,7 +116,7 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/save_profile', {
+      const response = await fetch(`${API_BASE_URL}/api/save_profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),

@@ -5,23 +5,6 @@
 # Node modules (se instalan en el build)
 node_modules/
 
-# Archivos multimedia pesados (no necesarios en producción)
-*.mp4
-*.m4a
-El_*.m4a
-El_*.mp4
-Más_*.mp4
-Fuerza_*.m4a
-
-# Imágenes grandes del root (no necesarias en el container)
-1x1_una_cancha_de_baloncesto_alucina.png
-BalonBackground.png
-Balonycancha.png
-Court.png
-equipo.png
-fondoasistentedeportivo.jpg
-nutricion.png
-
 # Python cache
 __pycache__/
 *.pyc
