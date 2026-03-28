@@ -41,9 +41,6 @@ RUN apt-get update && apt-get install -y \
     libxrender1 \
     libglib2.0-0 \
     libfontconfig1 \
-    # OpenCV runtime deps
-    libgl1-mesa-glx \
-    libglib2.0-0 \
     chromium \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
