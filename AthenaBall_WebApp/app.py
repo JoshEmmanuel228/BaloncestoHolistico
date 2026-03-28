@@ -63,8 +63,8 @@ def _lazy_load_models():
 
 
 # --- Email Notification Logic ---
-def send_email_notification(to_email, subject, body, image_data=None):
-    """Sends an email notification with optional image attachment."""
+def send_email_notification(to_email, subject, body):
+    """Sends a lightweight plain-text email notification."""
     sender_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com').strip()
     sender_password = os.environ.get('EMAIL_PASS', '').replace(' ', '').strip()
     
@@ -72,28 +72,11 @@ def send_email_notification(to_email, subject, body, image_data=None):
         return False
         
     try:
-        from email.mime.image import MIMEImage
         msg = MIMEMultipart()
         msg['From'] = sender_email
         msg['To'] = to_email
         msg['Subject'] = subject
-        
-        # HTML body to support embedded images
-        html_body = f"<html><body><p>{body.replace('\n', '<br>')}</p>"
-        if image_data:
-            html_body += '<br><p><b>Imagen de Perfil:</b></p><img src="cid:avatar_img" style="max-width:300px;">'
-        html_body += "</body></html>"
-        
-        msg.attach(MIMEText(html_body, 'html'))
-        
-        if image_data:
-            # Procesar base64
-            header, encoded = (image_data.split(",", 1) if "," in image_data else (None, image_data))
-            import base64
-            img_bytes = base64.b64decode(encoded)
-            img = MIMEImage(img_bytes)
-            img.add_header('Content-ID', '<avatar_img>')
-            msg.attach(img)
+        msg.attach(MIMEText(body, 'plain'))
         
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.login(sender_email, sender_password)
@@ -396,12 +379,11 @@ def create_app():
             json.dump(users, f, ensure_ascii=False, indent=4)
 
     def send_unified_notifications(data, action_type="ACTUALIZACIÓN"):
-        """Envía alertas por email y WhatsApp al admin y al usuario."""
+        """Envía alertas ultraligeras (solo texto) por email y WhatsApp."""
         name = data.get('name', 'N/A')
         email = data.get('email', 'N/A')
         phone = data.get('phone', '')
         bio = data.get('bio', 'N/A')
-        avatar = data.get('avatar') # Base64 si viene del perfil
         
         emoji = "👤"
         if "REGISTRO" in action_type.upper(): emoji = "🆕"
@@ -417,12 +399,12 @@ def create_app():
         body += f"Acción: {action_type}\n"
         
         primary_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com')
-        # Enviar al admin (Joshua)
-        send_email_notification(primary_email, subject, body, image_data=avatar)
+        # Admin (Joshua)
+        send_email_notification(primary_email, subject, body)
         
-        # Enviar al usuario si no es el admin y no es solo login/logout
+        # Usuario (si no es admin)
         if email and email != primary_email and '@' in email and "SESIÓN" not in action_type.upper() and "CIERRE" not in action_type.upper():
-            send_email_notification(email, subject, body, image_data=avatar)
+            send_email_notification(email, subject, body)
             
         if phone:
             clean_phone = ''.join(filter(str.isdigit, str(phone)))
@@ -436,28 +418,13 @@ def create_app():
                 whatsapp_msg += f"📱 *Móvil:* {phone}\n\n"
                 whatsapp_msg += "_Notificación automática del sistema._"
                 
-                if avatar and "base64" in str(avatar):
-                    try:
-                        # Intentar enviar con imagen (V2) - Timeout 8s para no bloquear
-                        resp = requests.post('http://localhost:3002/send-media', json={
-                            'number': clean_phone, 
-                            'caption': whatsapp_msg,
-                            'imageData': avatar
-                        }, timeout=8)
-                        if resp.status_code == 200:
-                            print(f"✅ WhatsApp Media enviado a {clean_phone}")
-                            return
-                    except Exception as media_err:
-                        print(f"⚠️ Fallo envío media ({media_err}), intentando fallback a texto...")
-
-                # Fallback o envío directo de texto
+                # Envío solo texto (ligero)
                 requests.post('http://localhost:3002/send', json={
                     'number': clean_phone, 
                     'message': whatsapp_msg
                 }, timeout=5)
-                print(f"✅ WhatsApp Texto enviado (fallback) a {clean_phone}")
             except Exception as e:
-                print(f"❌ Error Motor Ninja: {e}")
+                print(f"❌ Error WhatsApp: {e}")
 
     @app.route('/api/register', methods=['POST'])
     def register():

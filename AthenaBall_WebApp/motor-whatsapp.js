@@ -1,4 +1,4 @@
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const express = require('express');
 const cors = require('cors');
@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json({ limit: '50mb' })); // Aumentar límite para imágenes base64
+app.use(bodyParser.json({ limit: '1mb' })); // Ligero para solo texto
 
 let currentQR = '';
 let isReady = false;
@@ -20,6 +20,7 @@ const client = new Client({
     },
     puppeteer: {
         headless: true,
+        executablePath: '/usr/bin/chromium', // Crítico para Docker en Render
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -37,56 +38,22 @@ const client = new Client({
     }
 });
 
-// Cuando requiere escanear QR
 client.on('qr', (qr) => {
     console.log('--- NUEVO QR DETECTADO ---');
-    console.log('Escanea el QR para conectar tu WhatsApp:');
     qrcode.generate(qr, { small: true });
     currentQR = qr;
 });
 
-// Cuando ya está conectado
 client.on('ready', () => {
     console.log('¡SISTEMA NINJA CONECTADO Y LISTO!');
     isReady = true;
     currentQR = '';
 });
 
-// Iniciar el cliente
 client.initialize();
 
-// Rutas Express
 app.get('/status', (req, res) => {
     res.json({ ready: isReady, qr: currentQR });
-});
-
-// Nueva ruta para enviar Multimedia
-app.post('/send-media', async (req, res) => {
-    if (!isReady) return res.status(503).json({ error: 'WhatsApp no está listo.' });
-
-    try {
-        const { number, caption, imageData } = req.body;
-        const cleanNumber = number.replace(/\D/g, '');
-        const chatId = `${cleanNumber}@c.us`; 
-
-        if (!imageData) {
-            return res.status(400).json({ error: 'No se proporcionó imagen' });
-        }
-
-        // Remover prefijo data:image/...;base64, si existe
-        const base64Data = imageData.includes('base64,') 
-            ? imageData.split('base64,')[1] 
-            : imageData;
-
-        const media = new MessageMedia('image/jpeg', base64Data);
-        await client.sendMessage(chatId, media, { caption: caption || '' });
-        
-        console.log(`📸 Notificación Media enviada a ${cleanNumber}`);
-        res.json({ success: true, message: 'Media enviado' });
-    } catch (err) {
-        console.error('Error enviando media:', err);
-        res.status(500).json({ success: false, error: err.toString() });
-    }
 });
 
 app.post('/send', async (req, res) => {
@@ -98,7 +65,7 @@ app.post('/send', async (req, res) => {
         const chatId = `${cleanNumber}@c.us`; 
         
         await client.sendMessage(chatId, message);
-        console.log(`✅ Notificación Ninja enviada a ${cleanNumber}`);
+        console.log(`✅ Notificación Texto enviada a ${cleanNumber}`);
         res.json({ success: true, message: 'Notificación enviada' });
     } catch (err) {
         console.error('Error enviando mensaje:', err);
@@ -106,12 +73,12 @@ app.post('/send', async (req, res) => {
     }
 });
 
+const PORT = 3002;
 app.listen(PORT, () => {
     console.log(`\n🥷 Motor Ninja escuchando en el puerto ${PORT}`);
     
-    // Heartbeat cada 30 segundos en los logs
     setInterval(() => {
         const uptime = Math.floor(process.uptime());
         console.log(`💓 Heartbeat: Motor Ninja Activo | Uptime: ${uptime}s | Ready: ${isReady}`);
-    }, 30000);
+    }, 60000); // Heartbeat cada minuto
 });
