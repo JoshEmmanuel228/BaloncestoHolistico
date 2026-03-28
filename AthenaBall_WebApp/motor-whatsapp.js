@@ -31,6 +31,7 @@ const client = new Client({
             '--disable-sync',
             '--no-first-run',
             '--single-process',
+            '--no-zygote',
             '--js-flags=--max-old-space-size=128'
         ]
     }
