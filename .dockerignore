@@ -1,0 +1,48 @@
+# Git
+.git
+.gitignore
+
+# Node modules (se instalan en el build)
+node_modules/
+
+# Frontend build output (no necesario en backend)
+dist/
+src/
+public/
+*.tsx
+*.ts
+tsconfig*.json
+vite.config.ts
+index.html
+
+# Archivos multimedia pesados (no necesarios en producción)
+*.mp4
+*.m4a
+*.png
+*.jpg
+*.JPG
+*.jpeg
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Modelos YOLO estándar (se descargarán si se necesitan)
+yolov8x-seg.pt
+yolov8x-pose.pt
+
+# Docs
+README.md
+*.md.resolved
+
+# Env
+.env

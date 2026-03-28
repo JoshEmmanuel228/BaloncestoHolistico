@@ -1,15 +1,29 @@
-# Use a Python base image with Node.js support
+# Etapa 1: Build de dependencias (se cachea entre deploys)
+FROM python:3.12-slim AS builder
+
+# Instalar dependencias del sistema necesarias para compilar paquetes Python
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3-dev \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# Instalar dependencias Python en un directorio aislado
+COPY AthenaBall_WebApp/requirements_render.txt ./
+RUN pip install --no-cache-dir --prefix=/install -r requirements_render.txt
+
+# Etapa 2: Imagen final liviana
 FROM python:3.12-slim
 
-# Install system dependencies for Chromium (required for whatsapp-web.js)
+# Instalar SOLO las dependencias de runtime necesarias
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
-    git \
     procps \
-    build-essential \
-    python3-dev \
     ca-certificates \
+    # Dependencias de Chromium para WhatsApp Puppeteer
     libnss3 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
@@ -27,38 +41,44 @@ RUN apt-get update && apt-get install -y \
     libxrender1 \
     libglib2.0-0 \
     libfontconfig1 \
+    # OpenCV runtime deps
+    libgl1-mesa-glx \
+    libglib2.0-0 \
     chromium \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Node.js
+# Instalar Node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copiar paquetes Python pre-compilados desde la etapa builder
+COPY --from=builder /install /usr/local
 
 WORKDIR /app
 
-# Copy root package files
-COPY package.json ./
-RUN npm install
-
-# Copy AthenaBall_WebApp files and install dependencies
+# Copiar e instalar dependencias Node del Motor Ninja (WhatsApp)
 COPY AthenaBall_WebApp/package.json ./AthenaBall_WebApp/
-RUN cd AthenaBall_WebApp && npm install
+RUN cd AthenaBall_WebApp && npm install --production
 
-COPY AthenaBall_WebApp/requirements_render.txt ./AthenaBall_WebApp/
-RUN pip install --no-cache-dir -r AthenaBall_WebApp/requirements_render.txt
-
-# Copy the rest of the application
+# Copiar el código de la aplicación (respeta .dockerignore)
 COPY . .
 
-# Set environment variables
+# Variables de entorno
 ENV NODE_ENV=production
-ENV PORT=10000
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+# Forzar PyTorch a no intentar usar CUDA
+ENV CUDA_VISIBLE_DEVICES=""
+# Limitar threads de OpenMP/MKL para ahorrar memoria
+ENV OMP_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
 
-# Make start script executable
+# Hacer ejecutable el script de inicio
 RUN chmod +x start.sh
 
-# Expose ports
-EXPOSE 3000 10000 3002
+# Solo exponer el puerto que Render necesita detectar
+EXPOSE 10000
 
 CMD ["./start.sh"]

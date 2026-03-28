@@ -1,10 +1,8 @@
 import os
 import json
-import cv2
-import numpy as np
 import traceback
 import uuid
-import multiprocessing
+import threading
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -12,33 +10,65 @@ from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 
 # --- Load Environment Variables ---
-# Look for .env in the parent directory (root)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(os.path.dirname(BASE_DIR), '.env'))
 
-# --- Dependency Checks ---
-try:
-    from ultralytics import YOLO
-    from ultralytics.utils.plotting import Colors
-    YOLO_AVAILABLE = True
-except ImportError:
-    YOLO_AVAILABLE = False
+# --- Lazy-loaded globals (NO se cargan al importar, se cargan bajo demanda) ---
+_yolo_model = None
+_basket_model = None
+_pose_model = None
+_colors_util = None
+_models_lock = threading.Lock()
+_models_loaded = False
 
-try:
-    from PIL import Image, ImageDraw, ImageFont
-    PILLOW_AVAILABLE = True
-except ImportError:
-    PILLOW_AVAILABLE = False
+
+def _lazy_load_models():
+    """Carga los modelos YOLO solo cuando se necesitan (primera llamada a /api/analyze)."""
+    global _yolo_model, _basket_model, _pose_model, _colors_util, _models_loaded
+    
+    if _models_loaded:
+        return _yolo_model, _basket_model, _pose_model, _colors_util
+    
+    with _models_lock:
+        # Double-check después de obtener el lock
+        if _models_loaded:
+            return _yolo_model, _basket_model, _pose_model, _colors_util
+        
+        try:
+            from ultralytics import YOLO
+            from ultralytics.utils.plotting import Colors
+            
+            print(f"📦 Cargando modelos YOLO (lazy-load)... PID={os.getpid()}")
+            
+            basket_model_path = os.path.join(BASE_DIR, 'TRAin2.pt')
+            
+            print("  → Cargando YOLOv8x-seg...")
+            _yolo_model = YOLO('yolov8x-seg.pt')
+            
+            print(f"  → Cargando modelo custom desde {basket_model_path}...")
+            _basket_model = YOLO(basket_model_path)
+            
+            print("  → Cargando YOLOv8x-pose...")
+            _pose_model = YOLO('yolov8x-pose.pt')
+            
+            _colors_util = Colors()
+            _models_loaded = True
+            print(f"✅ Modelos cargados correctamente en PID={os.getpid()}")
+            
+            return _yolo_model, _basket_model, _pose_model, _colors_util
+        except Exception as e:
+            print(f"❌ Error al cargar modelos: {e}")
+            traceback.print_exc()
+            return None, None, None, None
+
 
 # --- Email Notification Logic ---
 def send_email_notification(to_email, subject, body):
     """Sends an email notification using Gmail SMTP."""
-    # Limpieza profunda de credenciales
     sender_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com').strip()
     sender_password = os.environ.get('EMAIL_PASS', '').replace(' ', '').strip()
     
     print(f"📧 Sistema de Email: Iniciando envío desde {sender_email}")
-    print(f"📧 Longitud Password: {len(sender_password)} caracteres")
     
     if not sender_password:
         print("⚠️ ADVERTENCIA: No se ha configurado EMAIL_PASS en las variables de entorno.")
@@ -52,7 +82,6 @@ def send_email_notification(to_email, subject, body):
         
         msg.attach(MIMEText(body, 'plain'))
         
-        # Usar SMTP_SSL en puerto 465 es a menudo más estable en Windows
         print(f"📧 Conectando a smtp.gmail.com:465...")
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.login(sender_email, sender_password)
@@ -63,65 +92,38 @@ def send_email_notification(to_email, subject, body):
         return True
     except smtplib.SMTPAuthenticationError:
         print(f"❌ Error de Autenticación (535): La contraseña de aplicación no fue aceptada.")
-        print(f"   Asegúrate de que la Verificación en 2 pasos esté ACTIVA y que la contraseña sea la de 16 letras.")
         return False
     except Exception as e:
         print(f"❌ Error inesperado al enviar correo: {e}")
         traceback.print_exc()
         return False
 
-# --- Top-Level Helper and Processing Functions ---
 
-def load_models_for_process():
-    """Loads models and returns them. Designed to be called by each process."""
-    if not YOLO_AVAILABLE:
-        print("ERROR: La librería 'ultralytics' no está instalada.")
-        return None, None, None, None
-    try:
-        print(f"Cargando modelos YOLO en proceso {os.getpid()}...")
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        
-        # Custom model (must be present in the container)
-        basket_model_path = os.path.join(BASE_DIR, 'TRAin2.pt')
-        
-        # Load models
-        # Use filenames for standard models to allow Ultralytics to auto-download them if missing
-        # Use absolute path for custom model
-        print("Cargando YOLOv8x-seg...")
-        yolo_m = YOLO('yolov8x-seg.pt') 
-        
-        print(f"Cargando Custom Model desde {basket_model_path}...")
-        if not os.path.exists(basket_model_path):
-            print(f"⚠️ ADVERTENCIA: No se encontró el modelo personalizado en {basket_model_path}")
-        basket_m = YOLO(basket_model_path)
-        
-        print("Cargando YOLOv8x-pose...")
-        pose_m = YOLO('yolov8x-pose.pt')
-        
-        colors_util = Colors()
-        print(f"✅ Modelos cargados correctamente en proceso {os.getpid()}.")
-        return yolo_m, basket_m, pose_m, colors_util
-    except Exception as e:
-        print(f"ERROR: No se pudieron cargar los modelos de YOLO en proceso {os.getpid()}. Error: {e}")
-        return None, None, None, None
+# --- Image Processing Functions (imports diferidos) ---
 
 def draw_text_utf8(image, text, position, font_size=15, color=(255, 255, 255)):
-    if not PILLOW_AVAILABLE:
+    import cv2
+    import numpy as np
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        pil_image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        draw = ImageDraw.Draw(pil_image)
+        try:
+            font = ImageFont.truetype("arial.ttf", font_size)
+        except IOError:
+            font = ImageFont.load_default()
+        draw.text(position, text, font=font, fill=color)
+        return cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
+    except ImportError:
         cv2.putText(image, text, position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
         return image
-    pil_image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-    draw = ImageDraw.Draw(pil_image)
-    try:
-        font = ImageFont.truetype("arial.ttf", font_size)
-    except IOError:
-        font = ImageFont.load_default()
-    draw.text(position, text, font=font, fill=color)
-    return cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
+
 
 def get_all_views_for_frame(frame, yolo_m, basket_m, pose_m, colors_util):
-    """
-    Processes a single frame and returns a dictionary with all 19+ view variations.
-    """
+    """Procesa un frame y retorna un diccionario con todas las vistas."""
+    import cv2
+    import numpy as np
+    
     views = {}
     yolo_model_results = yolo_m(frame, verbose=False)[0]
     basket_model_results = basket_m(frame, verbose=False)[0]
@@ -178,7 +180,6 @@ def get_all_views_for_frame(frame, yolo_m, basket_m, pose_m, colors_util):
     views['color_combined'] = color_combined
 
     boxes_only_img = frame.copy()
-    # This part is duplicated but necessary to build combined views
     for box in yolo_model_results.boxes:
         class_id, conf = int(box.cls[0]), float(box.conf[0])
         if class_id in [0, 32]:
@@ -208,17 +209,20 @@ def get_all_views_for_frame(frame, yolo_m, basket_m, pose_m, colors_util):
     
     return views
 
-def run_analysis_background(task_id, upload_path, file_type, tasks_dict, user_email=None):
-    """Worker function to run analysis in a background process."""
-    print(f"Starting analysis for task: {task_id} (type: {file_type}) in PID {os.getpid()}")
-    tasks_dict[task_id] = {'status': 'processing'}
+
+def run_analysis_background(task_id, upload_path, file_type, tasks, user_email=None):
+    """Worker function para análisis en un thread de fondo (no proceso separado)."""
+    import cv2
+    import numpy as np
+    
+    print(f"🔬 Iniciando análisis para tarea: {task_id} (tipo: {file_type})")
+    tasks[task_id] = {'status': 'processing'}
     
     try:
-        yolo_m, basket_m, pose_m, colors_util = load_models_for_process()
+        yolo_m, basket_m, pose_m, colors_util = _lazy_load_models()
         if not all([yolo_m, basket_m, pose_m, colors_util]):
-            raise RuntimeError("Failed to load models in background process.")
+            raise RuntimeError("No se pudieron cargar los modelos YOLO.")
 
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         RESULTS_FOLDER = os.path.join(BASE_DIR, 'static/results')
         os.makedirs(RESULTS_FOLDER, exist_ok=True)
         
@@ -228,7 +232,7 @@ def run_analysis_background(task_id, upload_path, file_type, tasks_dict, user_em
         
         if file_type == 'image':
             frame = cv2.imread(upload_path)
-            if frame is None: raise ValueError("Could not read image file")
+            if frame is None: raise ValueError("No se pudo leer el archivo de imagen")
             
             all_views = get_all_views_for_frame(frame, yolo_m, basket_m, pose_m, colors_util)
             
@@ -238,12 +242,16 @@ def run_analysis_background(task_id, upload_path, file_type, tasks_dict, user_em
                 cv2.imwrite(result_path, img_array)
                 result_urls[key] = f"/static/results/{result_filename}"
             
-            status_data = {'status': 'complete', 'result_urls': result_urls, 'result_type': file_type, 'available_views': list(all_views.keys())}
-            tasks_dict[task_id] = status_data
+            tasks[task_id] = {
+                'status': 'complete',
+                'result_urls': result_urls,
+                'result_type': file_type,
+                'available_views': list(all_views.keys())
+            }
 
         elif file_type == 'video':
             cap = cv2.VideoCapture(upload_path)
-            if not cap.isOpened(): raise ValueError("Could not open video file")
+            if not cap.isOpened(): raise ValueError("No se pudo abrir el archivo de video")
 
             fps = cap.get(cv2.CAP_PROP_FPS)
             width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -251,7 +259,7 @@ def run_analysis_background(task_id, upload_path, file_type, tasks_dict, user_em
 
             video_writers = {}
             first_frame = True
-            all_view_keys = [] # To store keys for video
+            all_view_keys = []
 
             while cap.isOpened():
                 ret, frame = cap.read()
@@ -260,7 +268,7 @@ def run_analysis_background(task_id, upload_path, file_type, tasks_dict, user_em
                 processed_views = get_all_views_for_frame(frame, yolo_m, basket_m, pose_m, colors_util)
                 
                 if first_frame:
-                    all_view_keys = list(processed_views.keys()) # Capture all view keys
+                    all_view_keys = list(processed_views.keys())
                     for key in all_view_keys:
                         result_filename = f"{task_id}_{key}.mp4"
                         result_path = os.path.join(RESULTS_FOLDER, result_filename)
@@ -270,61 +278,64 @@ def run_analysis_background(task_id, upload_path, file_type, tasks_dict, user_em
 
                 for key, view_frame in processed_views.items():
                     if key in video_writers:
-                        # Ensure the frame has 3 channels if it's a mask or grayscale
                         if len(view_frame.shape) == 2:
                             view_frame = cv2.cvtColor(view_frame, cv2.COLOR_GRAY2BGR)
-                        
-                        # Ensure frame size is correct, as some views might change it
                         if view_frame.shape[0] != height or view_frame.shape[1] != width:
                             view_frame = cv2.resize(view_frame, (width, height))
-
                         video_writers[key].write(view_frame)
             
             cap.release()
             for writer in video_writers.values():
                 writer.release()
             
-            status_data = {'status': 'complete', 'result_urls': result_urls, 'result_type': file_type, 'available_views': all_view_keys}
-            tasks_dict[task_id] = status_data
+            tasks[task_id] = {
+                'status': 'complete',
+                'result_urls': result_urls,
+                'result_type': file_type,
+                'available_views': all_view_keys
+            }
 
-        # --- Send Email Notification ---
+        # --- Notificación por Email ---
         subject = f"🏀 AthenaBall: Análisis completado ({task_id[:8]})"
         body = f"Hola,\n\nTu análisis de {file_type} en AthenaBall ha finalizado con éxito.\n\n"
         body += f"ID de Tarea: {task_id}\n"
         body += f"Archivo original: {original_filename}\n\n"
         body += "Ya puedes ver los resultados en el dashboard.\n\n¡Gracias por usar Basketball Holístico!"
         
-        # Send to user (if provided) and to the system admin/primary email
         primary_email = os.environ.get('EMAIL_USER', 'mexaion018@gmail.com')
         send_email_notification(primary_email, subject, body)
         
         if user_email and user_email != primary_email:
             send_email_notification(user_email, subject, body)
 
-        print(f"Finished analysis for task: {task_id}")
+        print(f"✅ Análisis completado para tarea: {task_id}")
 
     except Exception as e:
-        print(f"Error in background task {task_id}: {e}")
+        print(f"❌ Error en tarea {task_id}: {e}")
         traceback.print_exc()
-        tasks_dict[task_id] = {'status': 'failed', 'error': str(e)}
+        tasks[task_id] = {'status': 'failed', 'error': str(e)}
 
-# --- App Factory and Main Execution ---
+
+# --- App Factory ---
 def create_app():
     app = Flask(__name__)
     
-    # Enable CORS for all domains to ensure public access
     from flask_cors import CORS
     CORS(app)
     
-    app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/uploads')
+    app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'static/uploads')
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-    manager = multiprocessing.Manager()
-    tasks = manager.dict()
-
+    # Usar un dict normal con lock en vez de multiprocessing.Manager (ahorra ~30MB RAM)
+    tasks = {}
+    tasks_lock = threading.Lock()
 
     @app.route('/')
     def index():
+        return jsonify({"status": "running", "service": "AthenaBall API"})
+
+    @app.route('/api/')
+    def api_index():
         return jsonify({"status": "running", "service": "AthenaBall API"})
 
     @app.route('/api/analyze', methods=['POST'])
@@ -340,15 +351,28 @@ def create_app():
 
         file_type = 'video' if 'video' in file.content_type else 'image'
         original_file_url = f"/static/uploads/{filename}"
-        tasks[task_id] = {'status': 'pending'}
+        
+        with tasks_lock:
+            tasks[task_id] = {'status': 'pending'}
 
         user_email = request.form.get('user_email')
 
-        process = multiprocessing.Process(target=run_analysis_background, args=(task_id, upload_path, file_type, tasks, user_email))
-        process.start()
+        # Usar thread en vez de proceso separado (mucho menos RAM)
+        thread = threading.Thread(
+            target=run_analysis_background,
+            args=(task_id, upload_path, file_type, tasks, user_email),
+            daemon=True
+        )
+        thread.start()
 
-        return jsonify({'task_id': task_id, 'original_file_url': original_file_url, 'file_type': file_type, 'available_views': []}), 202
+        return jsonify({
+            'task_id': task_id,
+            'original_file_url': original_file_url,
+            'file_type': file_type,
+            'available_views': []
+        }), 202
 
+    # --- User Management ---
     USERS_DATA_FILE = os.path.join(BASE_DIR, 'users_data.json')
 
     def load_users():
@@ -363,7 +387,7 @@ def create_app():
             json.dump(users, f, ensure_ascii=False, indent=4)
 
     def send_unified_notifications(data, action_type="ACTUALIZACIÓN"):
-        """Sends email and WhatsApp alerts to both administrator and user."""
+        """Envía alertas por email y WhatsApp al admin y al usuario."""
         name = data.get('name', 'N/A')
         email = data.get('email', 'N/A')
         phone = data.get('phone', '')
@@ -383,20 +407,14 @@ def create_app():
         body += f"Acción: {action_type}\n"
         body += "Origen: Dashboard Principal\n"
         
-        # Email Notification - Administrator
         primary_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com')
         send_email_notification(primary_email, subject, body)
         
-        # Email Notification - User (if different and not a login event to avoid spam)
         if email and email != primary_email and '@' in email and "SESIÓN" not in action_type.upper():
             send_email_notification(email, subject, body)
             
-        # WhatsApp Notification (Ninja Method)
         if phone:
-            # Clean phone: only digits
             clean_phone = ''.join(filter(str.isdigit, str(phone)))
-            
-            # Format for Mexico: If 10 digits, prepend 521
             if len(clean_phone) == 10:
                 clean_phone = '521' + clean_phone
             
@@ -425,7 +443,6 @@ def create_app():
         if email in users:
             return jsonify({'error': 'User already exists'}), 400
         
-        # Build full profile from available data
         profile = {
             'name': data.get('name', ''),
             'email': email,
@@ -445,7 +462,6 @@ def create_app():
         }
         save_users(users)
         
-        # Notificar registro exitoso
         send_unified_notifications(profile, action_type="NUEVO USUARIO REGISTRADO")
         
         return jsonify({'status': 'success', 'user': profile}), 201
@@ -461,7 +477,6 @@ def create_app():
         if not user or user['password'] != password:
             return jsonify({'error': 'Invalid credentials'}), 401
             
-        # Notificar inicio de sesión
         send_unified_notifications(user['profile'], action_type="INICIO DE SESIÓN")
         
         return jsonify({'status': 'success', 'user': user['profile']}), 200
@@ -488,7 +503,6 @@ def create_app():
             users[email]['profile'].update(data)
             save_users(users)
             
-            # Notificar
             send_unified_notifications(data, action_type="PERFIL ACTUALIZADO")
             
             return jsonify({'status': 'success', 'message': 'Perfil guardado'}), 200
@@ -511,13 +525,9 @@ def create_app():
     
     return app
 
-# Expose app for Gunicorn
-app = None
+
+# Exponer app a nivel de módulo para Gunicorn: `gunicorn app:app`
+app = create_app()
 
 if __name__ == '__main__':
-    if not all([YOLO_AVAILABLE, PILLOW_AVAILABLE]):
-        print("Faltan dependencias. Por favor, instala 'ultralytics' y 'Pillow'.")
-    else:
-        multiprocessing.freeze_support()
-        app = create_app()
-        app.run(host='0.0.0.0', port=3001, debug=False)
+    app.run(host='0.0.0.0', port=3001, debug=False)

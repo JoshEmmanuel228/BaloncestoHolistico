@@ -7,7 +7,7 @@ services:
     region: ohio
     dockerContext: .
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /api/
+    healthCheckPath: /
     # Persistent Disk for WhatsApp Sessions
     disk:
       name: whatsapp-session-v1
