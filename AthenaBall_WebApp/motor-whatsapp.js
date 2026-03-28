@@ -106,7 +106,12 @@ app.post('/send', async (req, res) => {
     }
 });
 
-const PORT = 3002;
 app.listen(PORT, () => {
     console.log(`\n🥷 Motor Ninja escuchando en el puerto ${PORT}`);
+    
+    // Heartbeat cada 30 segundos en los logs
+    setInterval(() => {
+        const uptime = Math.floor(process.uptime());
+        console.log(`💓 Heartbeat: Motor Ninja Activo | Uptime: ${uptime}s | Ready: ${isReady}`);
+    }, 30000);
 });

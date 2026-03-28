@@ -437,20 +437,27 @@ def create_app():
                 whatsapp_msg += "_Notificación automática del sistema._"
                 
                 if avatar and "base64" in str(avatar):
-                    # Enviar con imagen
-                    requests.post('http://localhost:3002/send-media', json={
-                        'number': clean_phone, 
-                        'caption': whatsapp_msg,
-                        'imageData': avatar
-                    }, timeout=10)
-                else:
-                    # Enviar solo texto
-                    requests.post('http://localhost:3002/send', json={
-                        'number': clean_phone, 
-                        'message': whatsapp_msg
-                    }, timeout=5)
+                    try:
+                        # Intentar enviar con imagen (V2) - Timeout 8s para no bloquear
+                        resp = requests.post('http://localhost:3002/send-media', json={
+                            'number': clean_phone, 
+                            'caption': whatsapp_msg,
+                            'imageData': avatar
+                        }, timeout=8)
+                        if resp.status_code == 200:
+                            print(f"✅ WhatsApp Media enviado a {clean_phone}")
+                            return
+                    except Exception as media_err:
+                        print(f"⚠️ Fallo envío media ({media_err}), intentando fallback a texto...")
+
+                # Fallback o envío directo de texto
+                requests.post('http://localhost:3002/send', json={
+                    'number': clean_phone, 
+                    'message': whatsapp_msg
+                }, timeout=5)
+                print(f"✅ WhatsApp Texto enviado (fallback) a {clean_phone}")
             except Exception as e:
-                print(f"⚠️ Error Motor Ninja: {e}")
+                print(f"❌ Error Motor Ninja: {e}")
 
     @app.route('/api/register', methods=['POST'])
     def register():
@@ -508,6 +515,16 @@ def create_app():
         if data:
             send_unified_notifications(data, action_type="CIERRE DE SESIÓN")
         return jsonify({'status': 'success'}), 200
+
+    @app.route('/api/whatsapp-status', methods=['GET'])
+    def whatsapp_status():
+        """Puente para verificar el estado del Motor Ninja desde la web."""
+        try:
+            import requests
+            resp = requests.get('http://localhost:3002/status', timeout=3)
+            return jsonify(resp.json()), 200
+        except Exception as e:
+            return jsonify({"ready": False, "error": "Motor Ninja no responde", "details": str(e)}), 503
 
     @app.route('/api/get_profile', methods=['GET'])
     def get_profile():
