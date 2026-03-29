@@ -4,147 +4,259 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📱 Escanear QR - AthenaBall Producción</title>
-    <!-- Incluir biblioteca para generar QR -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Incluir biblioteca moderna para QR (qr-code-styling) -->
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
     <style>
+        :root {
+            --primary: #00eaff;
+            --secondary: #0066ff;
+            --bg-dark: #050f19;
+            --glass-bg: rgba(0, 40, 60, 0.4);
+            --glass-border: rgba(0, 234, 255, 0.3);
+            --text-light: #e0f7fa;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #050f19;
-            color: #00eaff;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at center, #0a1929 0%, var(--bg-dark) 100%);
+            color: var(--text-light);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             text-align: center;
         }
-        .card {
-            background-color: rgba(0, 40, 60, 0.8);
-            border: 2px solid #00f2fe;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
-            max-width: 400px;
-            width: 100%;
+
+        .container {
+            position: relative;
+            z-index: 10;
         }
-        #qr-container {
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 234, 255, 0.05);
+            max-width: 450px;
+            width: 100%;
+            transition: all 0.4s ease;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, #fff, var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        p {
+            color: #a0c4d8;
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        #qr-wrapper {
+            position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 20px 0;
+            margin: 20px auto;
             background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            min-height: 256px;
+            padding: 15px;
+            border-radius: 20px;
+            width: 320px;
+            height: 320px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 4px rgba(255,255,255,0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
         }
-        #status-text {
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            font-weight: bold;
+
+        #qr-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .btn {
-            background: linear-gradient(45deg, #00f2fe, #4facfe);
-            color: black;
-            border: none;
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             padding: 10px 20px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: 0.3s;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
         }
-        .btn:hover {
-            box-shadow: 0 0 15px #00eaff;
-        }
-        .loader {
-            border: 5px solid #004466;
-            border-top: 5px solid #00eaff;
+
+        .status-badge.loading { color: #ffd700; border-color: rgba(255, 215, 0, 0.3); }
+        .status-badge.success { color: #00ff88; border-color: rgba(0, 255, 136, 0.3); background: rgba(0, 255, 136, 0.1); }
+        .status-badge.error { color: #ff5555; border-color: rgba(255, 85, 85, 0.3); }
+        .status-badge.ready { color: var(--primary); border-color: var(--glass-border); }
+
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--primary);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 20px;
+            height: 20px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Effects */
+        .glow {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: var(--primary);
+            filter: blur(100px);
+            opacity: 0.3;
+            z-index: 1;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
         }
-        .success { color: #00ff88; }
-        .error { color: #ff5555; }
+        
+        .pulse {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(0, 234, 255, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(0, 234, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 234, 255, 0); }
+        }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>🔗 Vinculación WhatsApp (Producción)</h2>
-        <p>Abre WhatsApp en tu celular y escanea este código para conectar el servidor de Render.</p>
-        
-        <div id="status-text">Conectando al servidor...</div>
-        
-        <div id="qr-container">
-            <div class="loader" id="loader"></div>
-            <div id="qrcode"></div>
+    <div class="glow"></div>
+    <div class="container">
+        <div class="card">
+            <h2>🔗 Vinculación WhatsApp</h2>
+            <p>Conecta tu dispositivo para habilitar las notificaciones automáticas de AthenaBall en el servidor de producción.</p>
+            
+            <div id="status-badge" class="status-badge loading">
+                <div class="spinner" id="spinner"></div>
+                <span id="status-text">Iniciando conexión...</span>
+            </div>
+            
+            <div id="qr-wrapper">
+                <div id="qr-container"></div>
+            </div>
         </div>
-
-        <button class="btn" onclick="fetchQR()">Actualizar QR</button>
     </div>
 
     <script>
         const API_URL = 'https://baloncestoholistico.onrender.com/api/whatsapp-status';
-        let qrCodeObj = null;
+        let currentQRStr = null;
+
+        // Configuración Profesional del QR usando qr-code-styling pero con bloques estándar
+        const qrCode = new QRCodeStyling({
+            width: 320,
+            height: 320,
+            type: "svg", // Renderiza en SVG para máxima nitidez (resolución infinita)
+            data: "https://athenaball.com", // Placeholder inicial
+            margin: 10, // Margen blanco crítico
+            qrOptions: {
+                typeNumber: 0,
+                mode: "Byte",
+                errorCorrectionLevel: "M" // Nivel M es el estándar más compatible
+            },
+            imageOptions: {
+                hideBackgroundDots: false, // Mejor desactivar esto por si afecta
+                imageSize: 0.1,
+                margin: 0,
+                crossOrigin: "anonymous",
+            },
+            dotsOptions: {
+                color: "#000000", // Negro sólido tradicional y de más alto contraste
+                type: "square" // Cuadrados estrictos (WhatsApp suele rechazar los redondos)
+            },
+            backgroundOptions: {
+                color: "#ffffff",
+            },
+            cornersSquareOptions: {
+                color: "#000000",
+                type: "square" // Cuadrado perfecto tradicional
+            },
+            cornersDotOptions: {
+                color: "#000000",
+                type: "square" // Cuadrado perfecto tradicional
+            }
+        });
+
+        // Inicializar el QR vacío en el contenedor
+        qrCode.append(document.getElementById("qr-container"));
 
         async function fetchQR() {
+            const statusBadge = document.getElementById('status-badge');
             const statusText = document.getElementById('status-text');
-            const qrContainer = document.getElementById('qrcode');
-            const loader = document.getElementById('loader');
-
-            statusText.innerText = "Consultando a Render...";
-            statusText.className = "";
-            qrContainer.innerHTML = "";
-            loader.style.display = "block";
+            const spinner = document.getElementById('spinner');
 
             try {
                 const res = await fetch(API_URL);
                 const data = await res.json();
                 
-                loader.style.display = "none";
-
                 if (data.ready) {
-                    statusText.innerText = "✅ ¡WhatsApp ya está vinculado y LISTO EN PRODUCCIÓN!";
-                    statusText.className = "success";
+                    statusBadge.className = "status-badge success pulse";
+                    statusText.innerText = "¡Conectado exitosamente! Listo en Producción.";
+                    spinner.style.display = "none";
+                    document.getElementById('qr-wrapper').innerHTML = `<h1 style="color: #00a884; font-size: 5rem; margin: 0;">✅</h1>`;
+                    currentQRStr = null;
                     return;
                 }
 
                 if (data.qr && data.qr.trim() !== "") {
-                    statusText.innerText = "✅ QR Recibido. ¡Escanéalo rápido!";
-                    
-                    // Renderizar el QR
-                    qrCodeObj = new QRCode(qrContainer, {
-                        text: data.qr,
-                        width: 256,
-                        height: 256,
-                        colorDark : "#000000",
-                        colorLight : "#ffffff",
-                        correctLevel : QRCode.CorrectLevel.L
-                    });
+                    // Solo actualizamos el dibujo si la data realmente cambió
+                    if (data.qr !== currentQRStr) {
+                        qrCode.update({
+                            data: data.qr
+                        });
+                        currentQRStr = data.qr;
+                        
+                        statusBadge.className = "status-badge ready";
+                        statusText.innerText = "QR Listo. Escanéalo en WhatsApp.";
+                        spinner.style.display = "none";
+                        document.getElementById('qr-wrapper').classList.add('pulse');
+                    }
                 } else {
-                    statusText.innerText = "❌ No hay un QR disponible. ¿El servidor está reiniciando?";
-                    statusText.className = "error";
+                    statusBadge.className = "status-badge loading";
+                    statusText.innerText = "Esperando generación del código...";
+                    spinner.style.display = "block";
+                    document.getElementById('qr-wrapper').classList.remove('pulse');
                 }
 
             } catch (err) {
-                loader.style.display = "none";
-                statusText.innerText = "❌ Error de conexión. Intenta de nuevo en 1 minuto.";
-                statusText.className = "error";
-                console.error(err);
+                statusBadge.className = "status-badge error";
+                statusText.innerText = "Fallo de red. Reintentando...";
+                spinner.style.display = "none";
+                document.getElementById('qr-wrapper').classList.remove('pulse');
+                console.error("Error fetching QR:", err);
             }
         }
 
-        // Consultar automáticamente al abrir la página y cada 20 segundos
+        // Consultar de inmediato y luego cada 5 segundos para mantenerlo sincronizado sin parpadeos visuales
         fetchQR();
-        setInterval(fetchQR, 20000);
+        setInterval(fetchQR, 5000);
     </script>
 </body>
 </html>
