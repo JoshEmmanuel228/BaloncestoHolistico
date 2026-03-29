@@ -553,8 +553,8 @@ def create_app():
             print(f"📧 [1/3] Enviando email al admin ({primary_email})...")
             email_sent = send_email_notification(primary_email, subject, body)
             
-            # Usuario (si no es admin y no es login/logout)
-            if email and email != primary_email and '@' in email and "SESIÓN" not in action_type.upper() and "CIERRE" not in action_type.upper():
+            # Usuario (si no es admin)
+            if email and email != primary_email and '@' in email:
                 print(f"📧 [2/3] Enviando email al usuario ({email})...")
                 send_email_notification(email, subject, body)
             
