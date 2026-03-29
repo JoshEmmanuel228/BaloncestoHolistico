@@ -35,8 +35,20 @@ echo "📊 RAM antes de WhatsApp: $(get_ram)MB"
 
 # Función para iniciar Motor Ninja con supervisión
 start_ninja() {
+    echo "🚀 Preparando sesión iniciada localmente enviada desde el repositorio..."
+    cd /app/AthenaBall_WebApp
+
+    # Si subimos el ZIP de la sesión mágica, la descomprimimos en el Disco persistente de Render
+    if [ -f "wa_session.zip" ]; then
+        echo "📦 Descomprimiendo sesión pre-autorizada wa_session.zip..."
+        mkdir -p .wwebjs_auth
+        unzip -o wa_session.zip -d .wwebjs_auth/
+        # Para que no se vuelva a descomprimir en cada reinicio
+        rm wa_session.zip
+    fi
+
     echo "🚀 Iniciando Motor Ninja (WhatsApp)..."
-    cd /app/AthenaBall_WebApp && node motor-whatsapp.js
+    node motor-whatsapp.js
 }
 
 # Loop de supervisión: reiniciar Motor Ninja si muere
