@@ -35,6 +35,12 @@ echo "📊 RAM antes de WhatsApp: $(get_ram)MB"
 
 # Función para iniciar Motor Ninja con supervisión
 start_ninja() {
+    echo "📦 Verificando si existe sesión pre-autenticada (Plan B)..."
+    if [ ! -d "/app/AthenaBall_WebApp/.wwebjs_auth/session-athenaball-bot" ] && [ -f "/app/AthenaBall_WebApp/session_backup.zip" ]; then
+        echo "✅ Restaurando sesión ZIP pre-autenticada..."
+        python -c "import zipfile; zipfile.ZipFile('/app/AthenaBall_WebApp/session_backup.zip', 'r').extractall('/app/AthenaBall_WebApp/.wwebjs_auth')"
+    fi
+
     echo "🚀 Iniciando Motor Ninja (WhatsApp)..."
     cd /app/AthenaBall_WebApp && node motor-whatsapp.js
 }
