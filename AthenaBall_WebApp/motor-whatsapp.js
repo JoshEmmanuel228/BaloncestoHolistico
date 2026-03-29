@@ -53,17 +53,35 @@ function createClient() {
 
 let client = createClient();
 
+let qrGenerations = 0;
+
 function initializeClient() {
     client.on('qr', (qr) => {
         console.log('--- NUEVO QR DETECTADO ---');
         qrcode.generate(qr, { small: true });
         currentQR = qr;
+        
+        qrGenerations++;
+        // Si dejó la ventana abierta mucho tiempo (aprox 2 mins), WhatsApp deja de mandar QRs frescos.
+        // Reiniciamos el cliente automáticamente para mantener los QRs vivos.
+        if (qrGenerations > 5) {
+            console.log('⏳ El usuario tardó mucho en escanear. Reiniciando generador de QR...');
+            qrGenerations = 0;
+            currentQR = '';
+            
+            client.destroy().catch(() => {}).then(() => {
+                client = createClient();
+                initializeClient();
+                client.initialize();
+            });
+        }
     });
 
     client.on('ready', () => {
         console.log('✅ ¡SISTEMA NINJA CONECTADO Y LISTO!');
         isReady = true;
         currentQR = '';
+        qrGenerations = 0;
         reconnectAttempts = 0; // Reset al conectar exitosamente
     });
 
