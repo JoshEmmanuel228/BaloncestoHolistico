@@ -1,0 +1,21 @@
+{
+  "email": {
+    "configured": true,
+    "error": "[Errno 101] Network is unreachable",
+    "login_ok": false,
+    "pass_length": 16,
+    "user": "arressarton@gmail.com"
+  },
+  "env_vars": {
+    "EMAIL_PASS_set": true,
+    "EMAIL_USER_set": true
+  },
+  "test_sent": null,
+  "whatsapp": {
+    "memoryMB": 44,
+    "qr": "2@v46W4/jr0APMG+3vR/V7IQsvhQpntMJX7qJGsS+PVZbbkNLEbRjYDGDOiTJWvAGUy5HYLzNhl76ywBx8iopIXFOCCi4J6KPHPyA=,gUuoBe/mQDus8vqANPlEuOUIuZz9INk5vDpR/qxERXc=,h03rhIUaKlU9Aj5meP1eJwmH8ZWjp+OpQBUrBQG6TnI=,esqFb3XK/PnU/TDZ73oSBxqRkMCQTEGBp6A5U0HQPM0=,1",
+    "ready": false,
+    "reconnectAttempts": 0,
+    "uptime": 335
+  }
+}

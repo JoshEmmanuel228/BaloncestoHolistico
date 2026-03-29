@@ -133,8 +133,10 @@ def send_email_notification(to_email, subject, body, retries=2):
             msg['Subject'] = subject
             msg.attach(MIMEText(body, 'plain'))
             
-            print(f"📧 [EMAIL] Conectando a smtp.gmail.com:465 (intento {attempt + 1}/{retries + 1})...")
-            server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=15)
+            print(f"📧 [EMAIL] Conectando a smtp.gmail.com:587 (intento {attempt + 1}/{retries + 1})...")
+            server = smtplib.SMTP('smtp.gmail.com', 587, timeout=15)
+            server.ehlo()
+            server.starttls()
             server.login(sender_email, sender_password)
             server.sendmail(sender_email, to_email, msg.as_string())
             server.quit()
@@ -709,7 +711,9 @@ def create_app():
             email_status["user"] = sender_email
             email_status["pass_length"] = len(sender_password)
             try:
-                server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10)
+                server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
+                server.ehlo()
+                server.starttls()
                 server.login(sender_email, sender_password)
                 server.quit()
                 email_status["login_ok"] = True
