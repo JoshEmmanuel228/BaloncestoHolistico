@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 Escanear QR - AthenaBall Producción</title>
+    <!-- Incluir biblioteca para generar QR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #050f19;
+            color: #00eaff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .card {
+            background-color: rgba(0, 40, 60, 0.8);
+            border: 2px solid #00f2fe;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+            max-width: 400px;
+            width: 100%;
+        }
+        #qr-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 256px;
+        }
+        #status-text {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .btn {
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+        .btn:hover {
+            box-shadow: 0 0 15px #00eaff;
+        }
+        .loader {
+            border: 5px solid #004466;
+            border-top: 5px solid #00eaff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .success { color: #00ff88; }
+        .error { color: #ff5555; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>🔗 Vinculación WhatsApp (Producción)</h2>
+        <p>Abre WhatsApp en tu celular y escanea este código para conectar el servidor de Render.</p>
+        
+        <div id="status-text">Conectando al servidor...</div>
+        
+        <div id="qr-container">
+            <div class="loader" id="loader"></div>
+            <div id="qrcode"></div>
+        </div>
+
+        <button class="btn" onclick="fetchQR()">Actualizar QR</button>
+    </div>
+
+    <script>
+        const API_URL = 'https://baloncestoholistico.onrender.com/api/whatsapp-status';
+        let qrCodeObj = null;
+
+        async function fetchQR() {
+            const statusText = document.getElementById('status-text');
+            const qrContainer = document.getElementById('qrcode');
+            const loader = document.getElementById('loader');
+
+            statusText.innerText = "Consultando a Render...";
+            statusText.className = "";
+            qrContainer.innerHTML = "";
+            loader.style.display = "block";
+
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                
+                loader.style.display = "none";
+
+                if (data.ready) {
+                    statusText.innerText = "✅ ¡WhatsApp ya está vinculado y LISTO EN PRODUCCIÓN!";
+                    statusText.className = "success";
+                    return;
+                }
+
+                if (data.qr && data.qr.trim() !== "") {
+                    statusText.innerText = "✅ QR Recibido. ¡Escanéalo rápido!";
+                    
+                    // Renderizar el QR
+                    qrCodeObj = new QRCode(qrContainer, {
+                        text: data.qr,
+                        width: 256,
+                        height: 256,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.L
+                    });
+                } else {
+                    statusText.innerText = "❌ No hay un QR disponible. ¿El servidor está reiniciando?";
+                    statusText.className = "error";
+                }
+
+            } catch (err) {
+                loader.style.display = "none";
+                statusText.innerText = "❌ Error de conexión. Intenta de nuevo en 1 minuto.";
+                statusText.className = "error";
+                console.error(err);
+            }
+        }
+
+        // Consultar automáticamente al abrir la página y cada 20 segundos
+        fetchQR();
+        setInterval(fetchQR, 20000);
+    </script>
+</body>
+</html>

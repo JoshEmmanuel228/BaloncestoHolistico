@@ -36,7 +36,6 @@ function createClient() {
                 '--no-first-run',
                 '--single-process',
                 '--no-zygote',
-                '--js-flags=--max-old-space-size=96',
                 '--disable-features=TranslateUI',
                 '--disable-ipc-flooding-protection',
                 '--disable-renderer-backgrounding',

@@ -6,7 +6,7 @@
 export PORT=${PORT:-10000}
 
 # Limitar memoria de Node.js al mínimo funcional para el Motor Ninja
-export NODE_OPTIONS="--max-old-space-size=96"
+export NODE_OPTIONS="--max-old-space-size=150"
 
 # Función para obtener RAM usada (MB)
 get_ram() {
