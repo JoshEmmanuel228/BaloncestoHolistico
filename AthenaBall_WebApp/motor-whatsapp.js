@@ -16,7 +16,7 @@ const MAX_RECONNECT_ATTEMPTS = 5;
 // Configurar el cliente de WhatsApp
 function createClient() {
     return new Client({
-        authStrategy: new LocalAuth({ clientId: "athenaball-bot" }),
+        authStrategy: new LocalAuth({ clientId: "athenaball-bot-v2" }),
         webVersionCache: { 
             type: 'remote', 
             remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html' 
