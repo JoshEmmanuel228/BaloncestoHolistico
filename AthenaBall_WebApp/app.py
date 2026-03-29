@@ -113,10 +113,16 @@ def _unload_models():
 def send_email_notification(to_email, subject, body, retries=2):
     """Envía email con reintentos automáticos."""
     sender_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com').strip()
-    sender_password = os.environ.get('EMAIL_PASS', '').replace(' ', '').strip()
+    # Limpiar espacios, saltos de línea, retornos de carro
+    sender_password = os.environ.get('EMAIL_PASS', '').replace(' ', '').replace('\r', '').replace('\n', '').strip()
+    
+    print(f"📧 [EMAIL DEBUG] Intentando enviar a: {to_email}")
+    print(f"📧 [EMAIL DEBUG] Remitente: {sender_email}")
+    print(f"📧 [EMAIL DEBUG] Password configurado: {'SÍ (' + str(len(sender_password)) + ' chars)' if sender_password else 'NO - VACÍO'}")
     
     if not sender_password:
-        print(f"⚠️ EMAIL_PASS no configurado, no se puede enviar email a {to_email}")
+        print(f"⚠️ EMAIL_PASS no configurado en las variables de entorno. No se puede enviar email a {to_email}")
+        print(f"⚠️ Configura EMAIL_PASS en Render Dashboard → Environment")
         return False
     
     for attempt in range(retries + 1):
@@ -127,14 +133,19 @@ def send_email_notification(to_email, subject, body, retries=2):
             msg['Subject'] = subject
             msg.attach(MIMEText(body, 'plain'))
             
-            server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10)
+            print(f"📧 [EMAIL] Conectando a smtp.gmail.com:465 (intento {attempt + 1}/{retries + 1})...")
+            server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=15)
             server.login(sender_email, sender_password)
             server.sendmail(sender_email, to_email, msg.as_string())
             server.quit()
-            print(f"✅ Email enviado a {to_email}")
+            print(f"✅ Email enviado exitosamente a {to_email}")
             return True
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"❌ [EMAIL] Error de AUTENTICACIÓN Gmail (intento {attempt + 1}/{retries + 1}): {e}")
+            print(f"❌ [EMAIL] Verifica que EMAIL_PASS sea una 'App Password' de Google válida")
+            break  # No reintentar en error de autenticación
         except Exception as e:
-            print(f"❌ Error Email (intento {attempt + 1}/{retries + 1}): {e}")
+            print(f"❌ [EMAIL] Error (intento {attempt + 1}/{retries + 1}): {type(e).__name__}: {e}")
             if attempt < retries:
                 time.sleep(2 ** attempt)  # Backoff: 1s, 2s
     
@@ -509,57 +520,77 @@ def create_app():
         with open(USERS_DATA_FILE, 'w', encoding='utf-8') as f:
             json.dump(users, f, ensure_ascii=False, indent=4)
 
+    def _send_unified_notifications_worker(data, action_type="ACTUALIZACIÓN"):
+        """Worker interno que envía notificaciones (se ejecuta en background thread)."""
+        try:
+            name = data.get('name', 'N/A')
+            email = data.get('email', 'N/A')
+            phone = data.get('phone', '')
+            bio = data.get('bio', 'N/A')
+            
+            print(f"\n{'='*60}")
+            print(f"🔔 SISTEMA DE NOTIFICACIONES - {action_type}")
+            print(f"   Usuario: {name} | Email: {email} | Tel: {phone}")
+            print(f"{'='*60}")
+            
+            emoji = "👤"
+            if "REGISTRO" in action_type.upper(): emoji = "🆕"
+            elif "SESIÓN" in action_type.upper(): emoji = "🔐"
+            elif "CIERRE" in action_type.upper(): emoji = "🛑"
+            
+            # --- Email (siempre se intenta como canal más confiable) ---
+            subject = f"{emoji} {action_type}: {name}"
+            body = f"Evento de Basketball Holístico: {action_type}\n\n"
+            body += f"Nombre: {name}\n"
+            body += f"Email: {email}\n"
+            body += f"Teléfono: {phone}\n"
+            body += f"Bio: {bio}\n\n"
+            body += f"Acción: {action_type}\n"
+            
+            primary_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com')
+            
+            # Admin SIEMPRE recibe email
+            print(f"📧 [1/3] Enviando email al admin ({primary_email})...")
+            email_sent = send_email_notification(primary_email, subject, body)
+            
+            # Usuario (si no es admin y no es login/logout)
+            if email and email != primary_email and '@' in email and "SESIÓN" not in action_type.upper() and "CIERRE" not in action_type.upper():
+                print(f"📧 [2/3] Enviando email al usuario ({email})...")
+                send_email_notification(email, subject, body)
+            
+            # --- WhatsApp (se intenta, con fallback a email si falla) ---
+            whatsapp_sent = False
+            if phone:
+                print(f"📱 [3/3] Enviando WhatsApp a {phone}...")
+                whatsapp_msg = f"{emoji} *{action_type}*\n\n"
+                whatsapp_msg += f"👤 *Usuario:* {name}\n"
+                whatsapp_msg += f"📧 *Email:* {email}\n"
+                whatsapp_msg += f"📱 *Móvil:* {phone}\n\n"
+                whatsapp_msg += "_Notificación automática del sistema._"
+                
+                whatsapp_sent = send_whatsapp_notification(phone, whatsapp_msg)
+                
+                if not whatsapp_sent and not email_sent:
+                    print(f"⚠️ ALERTA CRÍTICA: Ni WhatsApp ni Email funcionaron para {name}")
+                    send_email_notification(primary_email, f"⚠️ FALLBACK: {subject}", body)
+            else:
+                print(f"📱 [3/3] Sin teléfono registrado, omitiendo WhatsApp")
+            
+            print(f"📊 RESULTADO '{action_type}': Email={'✅' if email_sent else '❌'} WhatsApp={'✅' if whatsapp_sent else '❌'}")
+            print(f"{'='*60}\n")
+        except Exception as e:
+            print(f"❌ ERROR CRÍTICO en notificaciones: {type(e).__name__}: {e}")
+            traceback.print_exc()
+
     def send_unified_notifications(data, action_type="ACTUALIZACIÓN"):
-        """Envía alertas por WhatsApp y email con fallback robusto.
-        
-        Prioridad: WhatsApp primero → si falla, email como respaldo.
-        Email al admin SIEMPRE se envía como respaldo garantizado.
-        """
-        name = data.get('name', 'N/A')
-        email = data.get('email', 'N/A')
-        phone = data.get('phone', '')
-        bio = data.get('bio', 'N/A')
-        
-        emoji = "👤"
-        if "REGISTRO" in action_type.upper(): emoji = "🆕"
-        elif "SESIÓN" in action_type.upper(): emoji = "🔐"
-        elif "CIERRE" in action_type.upper(): emoji = "🛑"
-        
-        # --- Email (siempre se intenta como canal más confiable) ---
-        subject = f"{emoji} {action_type}: {name}"
-        body = f"Evento de Basketball Holístico: {action_type}\n\n"
-        body += f"Nombre: {name}\n"
-        body += f"Email: {email}\n"
-        body += f"Teléfono: {phone}\n"
-        body += f"Bio: {bio}\n\n"
-        body += f"Acción: {action_type}\n"
-        
-        primary_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com')
-        
-        # Admin SIEMPRE recibe email
-        email_sent = send_email_notification(primary_email, subject, body)
-        
-        # Usuario (si no es admin y no es login/logout)
-        if email and email != primary_email and '@' in email and "SESIÓN" not in action_type.upper() and "CIERRE" not in action_type.upper():
-            send_email_notification(email, subject, body)
-        
-        # --- WhatsApp (se intenta, con fallback a email si falla) ---
-        whatsapp_sent = False
-        if phone:
-            whatsapp_msg = f"{emoji} *{action_type}*\n\n"
-            whatsapp_msg += f"👤 *Usuario:* {name}\n"
-            whatsapp_msg += f"📧 *Email:* {email}\n"
-            whatsapp_msg += f"📱 *Móvil:* {phone}\n\n"
-            whatsapp_msg += "_Notificación automática del sistema._"
-            
-            whatsapp_sent = send_whatsapp_notification(phone, whatsapp_msg)
-            
-            if not whatsapp_sent and not email_sent:
-                # Último intento: email al admin si todo falló
-                print(f"⚠️ ALERTA: Ni WhatsApp ni Email funcionaron para {name}")
-                send_email_notification(primary_email, f"⚠️ FALLBACK: {subject}", body)
-        
-        print(f"📊 Notificación '{action_type}': Email={'✅' if email_sent else '❌'} WhatsApp={'✅' if whatsapp_sent else '❌'}")
+        """Envía alertas en un thread de fondo para no bloquear el request HTTP."""
+        thread = threading.Thread(
+            target=_send_unified_notifications_worker,
+            args=(data.copy() if isinstance(data, dict) else data, action_type),
+            daemon=True
+        )
+        thread.start()
+        print(f"🚀 Notificación '{action_type}' despachada en background (thread)")
 
     @app.route('/api/register', methods=['POST'])
     def register():
@@ -655,6 +686,59 @@ def create_app():
             return jsonify({'status': 'success', 'message': 'Perfil guardado'}), 200
             
         return jsonify({'error': 'User not found'}), 404
+
+    @app.route('/api/notification-test', methods=['GET'])
+    def notification_test():
+        """Endpoint de diagnóstico para verificar configuración de notificaciones."""
+        sender_email = os.environ.get('EMAIL_USER', 'arressarton@gmail.com').strip()
+        sender_password = os.environ.get('EMAIL_PASS', '').replace(' ', '').replace('\r', '').replace('\n', '').strip()
+        
+        # Test de WhatsApp
+        wa_status = {"ready": False, "error": "No probado"}
+        try:
+            import requests as req
+            resp = req.get('http://localhost:3002/status', timeout=3)
+            wa_status = resp.json()
+        except Exception as e:
+            wa_status = {"ready": False, "error": str(e)}
+        
+        # Test de Email (solo verificar login, no enviar)
+        email_status = {"configured": False, "error": ""}
+        if sender_password:
+            email_status["configured"] = True
+            email_status["user"] = sender_email
+            email_status["pass_length"] = len(sender_password)
+            try:
+                server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10)
+                server.login(sender_email, sender_password)
+                server.quit()
+                email_status["login_ok"] = True
+            except Exception as e:
+                email_status["login_ok"] = False
+                email_status["error"] = str(e)
+        else:
+            email_status["error"] = "EMAIL_PASS no configurado en variables de entorno"
+        
+        # Si se pide envío de prueba
+        send_test = request.args.get('send', 'false').lower() == 'true'
+        test_result = None
+        if send_test:
+            test_email = request.args.get('to', sender_email)
+            test_result = send_email_notification(
+                test_email,
+                "🧪 TEST: Notificación de prueba",
+                "Este es un email de prueba del sistema AthenaBall.\nSi recibes esto, el email funciona correctamente.\n\n¡Saludos!"
+            )
+        
+        return jsonify({
+            "email": email_status,
+            "whatsapp": wa_status,
+            "test_sent": test_result,
+            "env_vars": {
+                "EMAIL_USER_set": bool(os.environ.get('EMAIL_USER')),
+                "EMAIL_PASS_set": bool(os.environ.get('EMAIL_PASS')),
+            }
+        }), 200
 
     @app.route('/api/notify_profile', methods=['POST'])
     def notify_profile():
